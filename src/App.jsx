@@ -408,7 +408,7 @@ function About(){
 
 function Featured(){
   const[readmeOpen,setReadmeOpen]=useState(false);
-  const openResume=()=>window.open("https://drive.google.com/file/d/YOUR_RESUME_ID/view","_blank");
+  const openResume=()=>window.open("https://drive.google.com/file/d/1I0B4qBvireOUrNzFIIT5IQZqH9Exn0N-/view?usp=sharing","_blank");
   return(
     <section className="sec-sep"id="featured">
       <div className="sec">
