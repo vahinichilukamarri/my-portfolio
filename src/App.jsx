@@ -438,7 +438,7 @@ function Featured(){
           <AnimatedSection delay={0.24}>
             <div className="feat-card feat-gh"onClick={()=>setReadmeOpen(o=>!o)}style={{cursor:"pointer"}}>
               <div className="feat-bg"/><div className="feat-card-inner">
-                <span className="feat-badge">GitHub README</span>
+                <span className="feat-badge">GitHub</span>
                 <div className="feat-title">vahinichilukamarri<wbr/>/vahinichilukamarri</div>
                 <div className="feat-desc">A collection of development projects demonstrating practical skills. Actively practicing DSA to improve problem-solving and coding efficiency.</div>
                 <div className="feat-arrow"><svg width="13"height="13"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><polyline points={readmeOpen?"18 15 12 9 6 15":"6 9 12 15 18 9"}/></svg>{readmeOpen?"Collapse ↑":"Read More →"}</div>
