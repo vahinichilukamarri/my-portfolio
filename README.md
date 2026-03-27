@@ -40,26 +40,6 @@ The application is built using modern web technologies:
 
 ---
 
-## 🚀 Getting Started
-
-To run this project locally:
-
-```bash
-# Clone the repository
-git clone <your-repo-link>
-
-# Navigate into the project directory
-cd portfolio
-
-# Install dependencies
-npm install
-
-# Start the development server
-npm start
-```
-
----
-
 ## 📌 Key Highlights
 
 * Focus on usability and performance
