@@ -415,7 +415,7 @@ function Featured(){
         <AnimatedSection><div className="sec-lbl">Featured</div><h2 className="sec-title">Connect & Explore</h2></AnimatedSection>
         <div className="featured-grid">
           <AnimatedSection delay={0.08}>
-            <a href="https://linkedin.com/in/vahini"target="_blank"rel="noreferrer"className="feat-card feat-li"style={{display:"block"}}>
+            <a href="https://www.linkedin.com/in/venkata-vahini-chilukamarri-2b5064314/"target="_blank"rel="noreferrer"className="feat-card feat-li"style={{display:"block"}}>
               <div className="feat-bg"/><div className="feat-card-inner">
                 <span className="feat-badge">LinkedIn</span>
                 <div className="feat-title">Let's Connect<br/>Professionally</div>
