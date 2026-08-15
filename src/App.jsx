@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
-import ContactWallet from "./ContactWallet";
+import ContactWallet from "./Contactwallet";
 import Cursor from "./Cursor";
 
 // Swap these paths for your actual filenames if different.
