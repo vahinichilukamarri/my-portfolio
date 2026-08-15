@@ -1,610 +1,926 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
+import ContactWallet from "./ContactWallet";
+import Cursor from "./Cursor";
 
-// ─── DATA ─────────────────────────────────────────────────
+// Swap these paths for your actual filenames if different.
+import linkedinPost1 from "./assets/offer_img.jpeg";
+import linkedinPost2 from "./assets/askbi.png";
+import linkedinPost3 from "./assets/PScertificate.png";
+
+/* ══════════════════════════════════════════════════════════
+   DATA — sourced from resume, edit freely
+   ══════════════════════════════════════════════════════════ */
+const LINKS = {
+  github: "https://github.com/vahinichilukamarri",
+  linkedin: "https://www.linkedin.com/in/venkata-vahini-chilukamarri-2b5064314/",
+  portfolio: "https://vahini-dev.vercel.app/",
+  email: "vahinivenkatac@gmail.com",
+  phone: "+91 8790261823",
+  resume: "https://drive.google.com/file/d/1M56gX1bDiletvw2IyHBUeyjhhDRHmXUH/view?usp=sharing",
+};
+
+const NAV = [
+  { id: "hero", label: "Home", num: "00" },
+  { id: "about", label: "About", num: "01" },
+  { id: "experience", label: "Experience", num: "02" },
+  { id: "work", label: "Work", num: "03" },
+  { id: "stack", label: "Stack", num: "04" },
+  { id: "network", label: "Network", num: "05" },
+  { id: "terminal", label: "Terminal", num: "06" },
+  { id: "recognition", label: "Recognition", num: "07" },
+  { id: "contact", label: "Contact", num: "08" },
+];
+
+const TICKER = [
+  "whoami → venkata vahini chilukamarri",
+  "role → ai/ml engineer, full-stack developer",
+  "status → open to internships",
+  "cgpa → 9.12 / 10.0 · kmit",
+  "building → distributed systems, llm evaluation, rag pipelines",
+];
+
+const EXPERIENCE = {
+  org: "Salesforce Mentorship Program",
+  role: "Software Engineering Mentee — Microservice Health & API Performance Orchestrator",
+  where: "GitHub · Remote",
+  when: "June 2026 – August 2026",
+  gh: "https://github.com/Harshitha-Macha/Automated-Microservice-Health-API-Performance-Orchestrator-v2",
+  points: [
+    "Designed a dependency-graph engine that auto-discovers service dependencies from OpenTelemetry trace spans, using Tarjan's SCC to detect and collapse circular dependencies before analysis.",
+    "Built a root-cause analysis engine combining topological root-finding with time-correlation ranking, plus cycle-safe BFS/DFS blast-radius computation to predict cascading failure impact.",
+    "Built a deduplicated Slack/Discord alerting pipeline with flap suppression and retry/fallback logging, backed by a SQLite incident store and a live Cytoscape.js dependency dashboard.",
+  ],
+  stack: ["FastAPI", "OpenTelemetry", "SQLite", "Cytoscape.js", "Slack API", "Graph Algorithms"],
+};
+
 const PROJECTS = [
-  { title:"EvalEngine",sub:"LLM Evaluation & Improvement Engine",stack:["Python","Streamlit","LLM APIs"],badge:"AI / ML",color:"#7ee8a2",db:false,desc:"An LLM-based evaluation system that analyzes and compares multiple model-generated responses for reliability. Features multi-response ranking using an LLM-as-a-judge, a scoring pipeline across key quality metrics, and a fallback refinement mechanism.",hl:["Multi-response ranking with reasoning","Scoring pipeline: relevance, correctness, completeness, bias","Fallback refinement for weak outputs","Interactive Streamlit dashboard","Hallucination detection & RAG in progress"],gh:"https://github.com/vahinichilukamarri"},
-  { title:"AskBI",sub:"AI-Powered Business Intelligence Dashboard",stack:["React","FastAPI","Pandas","LLM APIs","SQL"],badge:"Full-Stack",color:"#5bc4e0",db:false,desc:"A natural language to SQL system enabling users to query structured datasets using plain English. Built an LLM-based query generation pipeline, a FastAPI backend with Pandas for data handling, and a React dashboard to visualize business insights in real time.",hl:["Natural language to SQL via LLM","FastAPI backend with Pandas","React dashboard for real-time insights","Automated queries for non-technical users"],gh:"https://github.com/vahinichilukamarri"},
-  { title:"MoodAngels",sub:"AI-Based Psychiatric Diagnostic Support",stack:["Python","NLP","MERN Stack"],badge:"NLP",color:"#c4a7e7",db:false,desc:"A multi-agent system to analyze patient symptoms and assist in diagnostic reasoning. Built NLP-based modules to process behavioral and textual patient data, generated 500+ synthetic psychiatric case records, and developed a MERN dashboard.",hl:["Multi-agent diagnostic reasoning","NLP modules for behavioral data","500+ synthetic psychiatric case records","MERN dashboard for case visualization"],gh:"https://github.com/vahinichilukamarri"},
-  { title:"SafeStreet",sub:"Road Damage Detection System",stack:["Vision Transformer (ViT)","React Native","React.js","Node.js","REST API"],badge:"Computer Vision",color:"#f0a070",db:false,desc:"Trained a Vision Transformer model to classify road damage types with high accuracy. Built a Node.js REST API for real-time predictions, a React Native mobile app for damage capture, and a React.js web dashboard with geolocation-based mapping.",hl:["ViT model for road damage classification","Node.js REST API for predictions","React Native mobile app","Geolocation-mapped web dashboard"],gh:"https://github.com/vahinichilukamarri"},
-  { title:"NextRide",sub:"Smart School Bus Tracking & Route Optimization",stack:["Node.js","Leaflet.js","MongoDB","HTML","CSS"],badge:"Tracking",color:"#e0c457",db:true,desc:"A real-time GPS tracking system with dynamic route updates based on student attendance. Built with Node.js backend and MongoDB for data persistence, using HTML/CSS frontend via REST API. Optimized routes reduce unnecessary stops.",hl:["Real-time GPS tracking system","MongoDB for persistent data storage","Node.js + HTML/CSS architecture","Dynamic routing by attendance","Leaflet.js map interface"],gh:"https://github.com/vahinichilukamarri"},
+  {
+    no: "01", title: "Microservice Health Orchestrator", sub: "Observability platform · root-cause & blast-radius analysis",
+    accent: "violet",
+    desc: "The applied output of the Salesforce mentorship — a self-hosted platform that watches a microservice fleet, finds the root cause of an incident, and estimates blast radius before it spreads.",
+    points: ["Dependency graph auto-discovered from OTel spans; cycles resolved with Tarjan's SCC", "Root-cause via topological root-finding + time-correlation ranking", "Cycle-safe BFS/DFS blast-radius detection feeding a live Cytoscape.js dashboard"],
+    stack: ["React", "FastAPI", "OpenTelemetry", "SQLite"],
+    gh: EXPERIENCE.gh,
+  },
+  {
+    no: "02", title: "EvalEngine", sub: "LLM evaluation & improvement engine",
+    accent: "cyan",
+    desc: "A judge for other models. Generates, scores, and ranks multiple AI responses through structured multi-metric analysis, mimicking RLHF-style iterative refinement.",
+    points: ["LLM-as-judge scoring across relevance, correctness, completeness, and bias", "Feedback-driven refinement loop with an interactive Streamlit dashboard", "Currently extending with hallucination detection and RAG for factual grounding"],
+    stack: ["Python", "Streamlit", "LLM APIs", "Pandas", "Scikit-learn"],
+    gh: "https://github.com/vahinichilukamarri/llm-evaluation-engine.git",
+  },
+  {
+    no: "03", title: "AskBI", sub: "Plain-English business intelligence",
+    accent: "amber",
+    desc: "Ask a structured dataset a question in plain English and get back SQL, a result set, and a chart — built so non-technical teams can query and visualize data directly.",
+    points: ["Natural-language-to-SQL via an LLM-based query generation pipeline", "FastAPI + Pandas backend for execution against real datasets", "React dashboard for real-time result visualization"],
+    stack: ["React", "FastAPI", "Pandas", "LLM APIs", "SQL"],
+    gh: "https://github.com/vahinichilukamarri/AskBI",
+  },
+  {
+    no: "04", title: "MoodAngels", sub: "AI-based psychiatric diagnostic support",
+    accent: "violet",
+    desc: "A multi-agent NLP system that analyzes behavioral and textual patient data to assist diagnostic reasoning, evaluated on a synthetic dataset of 500+ case records.",
+    points: ["Multi-agent architecture splitting behavioral vs. textual signal analysis", "NLP pipeline for pattern extraction across patient case records", "Evaluated on 500+ synthetic diagnostic cases for reasoning consistency"],
+    stack: ["Python", "NLP", "MERN Stack"],
+    gh: "https://github.com/AnishaPaturi/Mood-Angles",
+  },
+  {
+    no: "05", title: "SafeStreet", sub: "Vision-Transformer road damage detection",
+    accent: "cyan",
+    desc: "A Vision Transformer trained to classify road damage, served through a Node.js REST API with a React Native field app and a React.js geolocation dashboard for end-to-end reporting.",
+    points: ["ViT model trained for multi-class road damage classification", "Node.js REST API serving predictions to mobile and web clients", "React Native capture app + React.js geolocation dashboard"],
+    stack: ["Vision Transformer", "React Native", "React", "Node.js"],
+    gh: LINKS.github,
+  },
 ];
 
-const SKILLS = [
-  {cat:"Languages",ico:"{ }",color:"#7ee8a2",items:["Python","JavaScript","Java","C/C++","SQL","HTML/CSS"]},
-  {cat:"Full-Stack & Frameworks",ico:"⚡",color:"#5bc4e0",items:["ReactJS","Node.js","Express.js","FastAPI","REST API","MERN Stack","React Native","Streamlit"]},
-  {cat:"AI / ML & Deep Learning",ico:"🧠",color:"#c4a7e7",items:["TensorFlow","Keras","PyTorch","Transformers","NLP","Vision Transformer (ViT)","LLM APIs","LLM Evaluation","RAG (in progress)","Prompt Engineering"]},
-  {cat:"Databases & Tools",ico:"🛠",color:"#f0a070",items:["MySQL","MongoDB","Git","GitHub","Docker","Jupyter Notebook"]},
-  {cat:"Core Concepts",ico:"📐",color:"#e0c457",items:["Data Structures & Algorithms","OOP","Machine Learning","CI/CD","SDLC"]},
+const STACK = [
+  { cat: "Languages", accent: "violet", items: ["Python", "JavaScript", "Java", "C / C++", "SQL", "HTML / CSS"] },
+  { cat: "Full-Stack & Frameworks", accent: "cyan", items: ["React", "Node.js", "Express", "FastAPI", "REST APIs", "MERN Stack", "React Native", "Streamlit"] },
+  { cat: "AI / ML & Deep Learning", accent: "amber", items: ["TensorFlow", "PyTorch", "Keras", "Hugging Face", "Vision Transformers", "NLP", "RAG", "Prompt Engineering", "Fine-tuning", "LLM APIs"] },
+  { cat: "Data & Tooling", accent: "violet", items: ["MySQL", "MongoDB", "SQLite", "Git / GitHub", "Docker", "Jupyter", "Pandas", "NumPy", "Scikit-learn"] },
+  { cat: "Core Concepts", accent: "cyan", items: ["Data Structures & Algorithms", "OOP", "Distributed Systems & Observability", "CI/CD", "SDLC"] },
 ];
-const CERTS=[{title:"SQL (Intermediate)",org:"HackerRank",ico:"🏆",color:"#7ee8a2"},{title:"Generative AI for Beginners",org:"GreatLearning",ico:"🤖",color:"#5bc4e0"},{title:"Generative AI Workshop",org:"Skilligence Edtech × IIT Hyderabad",ico:"🎓",color:"#c4a7e7"}];
-const ACHS=[{title:"DBMS Workshop Facilitator",desc:"Co-taught a peer workshop on Database Management Systems at KMIT",ico:"📚",color:"#f0a070"},{title:"PRAKALP Hackathon",desc:"Developed a Bluetooth Talking Vehicle prototype (6-member team)",ico:"⚡",color:"#e0c457"},{title:"GeeksforGeeks Hackathon",desc:"Built a working prototype demonstrating end-to-end system design",ico:"💡",color:"#7ee8a2"},{title:"Top 3% — Intermediate Statewide",desc:"Achieved 97.0% in MPC (2021–2023), placing in top 3% statewide",ico:"🌟",color:"#5bc4e0"},{title:"Perfect SSC Score",desc:"Completed Secondary School Certificate with a perfect GPA of 10/10",ico:"🎯",color:"#c4a7e7"}];
 
-function GithubIcon(){return(<svg width="16"height="16"viewBox="0 0 24 24"fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>);}
+// Real LinkedIn posts — tags pulled from each post's own hashtags, links go straight to the post.
+const LINKEDIN_POSTS = [
+  { img: linkedinPost1, tags: ["Centific", "Hackathon", "ArtificialIntelligence"], url: "https://www.linkedin.com/posts/venkata-vahini-chilukamarri-2b5064314_centific-hackathon-artificialintelligence-activity-7458464588808863745-sTxB" },
+  { img: linkedinPost2, tags: ["AI", "MachineLearning", "DataScience"], url: "https://www.linkedin.com/posts/venkata-vahini-chilukamarri-2b5064314_ai-machinelearning-datascience-activity-7448384011443433472-7ekJ" },
+  { img: linkedinPost3, tags: ["ReactNative", "AI", "ComputerVision"], url: "https://www.linkedin.com/posts/venkata-vahini-chilukamarri-2b5064314_reactnative-ai-computervision-activity-7380108463823056896-DkQd" },
+];
 
-function AnimatedSection({children,delay=0,className=""}){
-  const ref=useRef(null);const[visible,setVisible]=useState(false);
-  useEffect(()=>{const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){setVisible(true);o.disconnect();}},{threshold:.1});if(ref.current)o.observe(ref.current);return()=>o.disconnect();},[]);
-  return(<div ref={ref}className={`ha ${visible?"rev":""} ${className}`}style={{transitionDelay:`${delay}s`}}>{children}</div>);
-}
+const CERTS = [
+  { t: "SQL (Intermediate)", o: "HackerRank" },
+  { t: "Generative AI for Beginners", o: "GreatLearning" },
+  { t: "Generative AI Workshop", o: "Skilligence Edtech × IIT Hyderabad" },
+];
 
-// ══════════════════════════════════════════════════════════
-//  NEBULA BACKGROUND — deep space with clouds, stars, shooters
-// ══════════════════════════════════════════════════════════
-function NebulaBackground(){
-  const canvasRef=useRef(null);
-  useEffect(()=>{
-    const canvas=canvasRef.current;
-    const ctx=canvas.getContext("2d");
-    let animId,t=0;
-    const resize=()=>{canvas.width=window.innerWidth;canvas.height=Math.max(document.body.scrollHeight,window.innerHeight);};
-    resize();
-    window.addEventListener("resize",resize);
+const ACHIEVEMENTS = [
+  { t: "DBMS Workshop Facilitator", d: "Co-taught a peer workshop on database systems at KMIT" },
+  { t: "PRAKALP Hackathon", d: "Bluetooth Talking Vehicle prototype, team build" },
+  { t: "GeeksforGeeks Hackathon", d: "End-to-end system design, working prototype" },
+  { t: "Contributor, Rewriting the Code", d: "Durham, NC nonprofit — remote, since June 2026" },
+  { t: "Graphic Designer Intern", d: "PR Team, Student Council, KMIT — 20+ assets, 2,000+ reach" },
+  { t: "NSS Volunteer", d: "5+ community drives, 40+ volunteer hours since Aug 2023" },
+  { t: "Top 3% Statewide, Intermediate", d: "97.0% in MPC, Narayana Junior College" },
+];
 
-    // Nebula blobs
-    const blobs=Array.from({length:9},(_,i)=>({
-      x:Math.random()*window.innerWidth,
-      y:Math.random()*Math.max(document.body.scrollHeight,window.innerHeight),
-      rx:180+Math.random()*380,ry:120+Math.random()*280,
-      hue:[152,195,265,28,175][i%5],
-      alpha:0.028+Math.random()*0.038,
-      driftX:(Math.random()-.5)*0.05,driftY:(Math.random()-.5)*0.03,
-      phase:Math.random()*Math.PI*2,
-    }));
+const ACCENT = {
+  violet: { text: "text-[var(--violet)]", ring: "ring-[var(--violet)]/30", bg: "bg-[var(--violet)]/10", border: "border-[var(--violet)]/30", dot: "bg-[var(--violet)]" },
+  cyan: { text: "text-[var(--cyan)]", ring: "ring-[var(--cyan)]/30", bg: "bg-[var(--cyan)]/10", border: "border-[var(--cyan)]/30", dot: "bg-[var(--cyan)]" },
+  amber: { text: "text-[var(--amber)]", ring: "ring-[var(--amber)]/30", bg: "bg-[var(--amber)]/10", border: "border-[var(--amber)]/30", dot: "bg-[var(--amber)]" },
+};
 
-    // Stars
-    const stars=Array.from({length:280},()=>({
-      x:Math.random()*window.innerWidth,
-      y:Math.random()*Math.max(document.body.scrollHeight,window.innerHeight),
-      r:Math.random()<0.8?Math.random()*0.85+0.15:Math.random()*1.8+0.8,
-      speed:0.5+Math.random()*2,phase:Math.random()*Math.PI*2,
-      col:Math.random()<0.25?"168,216,255":Math.random()<0.4?"255,230,200":"255,255,255",
-    }));
+/* ══════════════════════════════════════════════════════════
+   TERMINAL COMMANDS — driven entirely by this page's own data
+   ══════════════════════════════════════════════════════════ */
+function useTerminalCommands() {
+  const repos = PROJECTS.map(p => ({ slug: p.title.toLowerCase().replace(/\s+/g, "-"), ...p }));
 
-    // Constellation groups
-    const consts=[
-      [[0.07,0.09],[0.13,0.05],[0.20,0.08],[0.17,0.14],[0.13,0.05]],
-      [[0.76,0.04],[0.83,0.08],[0.89,0.05],[0.86,0.13],[0.83,0.08]],
-      [[0.54,0.72],[0.59,0.67],[0.65,0.71],[0.63,0.78],[0.57,0.80],[0.54,0.72]],
-      [[0.35,0.45],[0.40,0.40],[0.44,0.44],[0.40,0.50],[0.35,0.45]],
-    ];
-
-    // Shooting stars
-    let shooters=[];
-    const spawnShooter=()=>shooters.push({
-      x:Math.random()*canvas.width,
-      y:Math.random()*canvas.height*0.45,
-      len:90+Math.random()*140,speed:7+Math.random()*9,
-      angle:Math.PI/6+Math.random()*0.28,life:1,
-    });
-    const si=setInterval(spawnShooter,2800);
-
-    const draw=()=>{
-      // Update canvas height in case DOM grew
-      const pageH=Math.max(document.body.scrollHeight,window.innerHeight);
-      if(Math.abs(canvas.height-pageH)>50){canvas.height=pageH;}
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      t+=0.004;
-
-      // ── Base: very dark deep-space gradient
-      const bg=ctx.createLinearGradient(0,0,canvas.width*.5,canvas.height);
-      bg.addColorStop(0,"#01030d");
-      bg.addColorStop(.3,"#020612");
-      bg.addColorStop(.7,"#030916");
-      bg.addColorStop(1,"#010410");
-      ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
-
-      // ── Nebula blobs
-      blobs.forEach(c=>{
-        c.x+=c.driftX;c.y+=c.driftY;
-        if(c.x<-c.rx)c.x=canvas.width+c.rx;if(c.x>canvas.width+c.rx)c.x=-c.rx;
-        if(c.y<-c.ry)c.y=canvas.height+c.ry;if(c.y>canvas.height+c.ry)c.y=-c.ry;
-        const pulse=1+Math.sin(t*0.3+c.phase)*0.12;
-        const g=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,c.rx*pulse);
-        g.addColorStop(0,`hsla(${c.hue},75%,58%,${c.alpha*1.8})`);
-        g.addColorStop(.45,`hsla(${c.hue},65%,42%,${c.alpha*0.9})`);
-        g.addColorStop(1,`hsla(${c.hue},55%,28%,0)`);
-        ctx.save();
-        ctx.scale(1,c.ry/c.rx);
-        ctx.beginPath();ctx.arc(c.x,c.y*(c.rx/c.ry),c.rx*pulse,0,Math.PI*2);
-        ctx.fillStyle=g;ctx.fill();
-        ctx.restore();
-      });
-
-      // ── Constellation lines
-      consts.forEach(pts=>{
-        ctx.beginPath();
-        pts.forEach(([fx,fy],i)=>{
-          const x=fx*canvas.width,y=fy*canvas.height;
-          i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-        });
-        ctx.strokeStyle="rgba(126,232,162,0.08)";ctx.lineWidth=0.7;ctx.stroke();
-        pts.forEach(([fx,fy])=>{
-          ctx.beginPath();ctx.arc(fx*canvas.width,fy*canvas.height,1.8,0,Math.PI*2);
-          ctx.fillStyle="rgba(126,232,162,0.4)";ctx.fill();
-        });
-      });
-
-      // ── Stars with twinkle
-      stars.forEach(s=>{
-        const tw=0.35+0.65*Math.abs(Math.sin(t*s.speed+s.phase));
-        ctx.globalAlpha=tw*0.9;
-        ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-        ctx.fillStyle=`rgb(${s.col})`;ctx.fill();
-        // Glow on brighter stars
-        if(s.r>1.2){
-          const glow=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.r*4);
-          glow.addColorStop(0,`rgba(${s.col},${tw*0.3})`);
-          glow.addColorStop(1,"rgba(0,0,0,0)");
-          ctx.beginPath();ctx.arc(s.x,s.y,s.r*4,0,Math.PI*2);
-          ctx.fillStyle=glow;ctx.fill();
-        }
-        ctx.globalAlpha=1;
-      });
-
-      // ── Shooting stars
-      shooters=shooters.filter(s=>s.life>0);
-      shooters.forEach(s=>{
-        s.x+=Math.cos(s.angle)*s.speed;s.y+=Math.sin(s.angle)*s.speed;s.life-=0.016;
-        const tx=s.x-Math.cos(s.angle)*s.len,ty=s.y-Math.sin(s.angle)*s.len;
-        const g=ctx.createLinearGradient(tx,ty,s.x,s.y);
-        g.addColorStop(0,"rgba(126,232,162,0)");
-        g.addColorStop(.7,`rgba(200,255,230,${s.life*0.5})`);
-        g.addColorStop(1,`rgba(255,255,255,${s.life})`);
-        ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(s.x,s.y);
-        ctx.strokeStyle=g;ctx.lineWidth=1.5;ctx.stroke();
-        // Sparkle tip
-        ctx.beginPath();ctx.arc(s.x,s.y,2,0,Math.PI*2);
-        ctx.fillStyle=`rgba(255,255,255,${s.life*0.9})`;ctx.fill();
-      });
-
-      animId=requestAnimationFrame(draw);
-    };
-    draw();
-    return()=>{cancelAnimationFrame(animId);clearInterval(si);window.removeEventListener("resize",resize);};
-  },[]);
-  return <canvas ref={canvasRef} id="nebula-bg"/>;
-}
-
-// ══════════════════════════════════════════════════════════
-//  HERO CANVAS — mesh node network
-// ══════════════════════════════════════════════════════════
-function HeroCanvas(){
-  const ref=useRef(null);
-  useEffect(()=>{
-    const canvas=ref.current,ctx=canvas.getContext("2d");let animId;
-    const resize=()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;};
-    resize();window.addEventListener("resize",resize);
-    const COLS=["126,232,162","91,196,224","196,167,231"];
-    const nodes=Array.from({length:42},()=>({
-      x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,
-      r:Math.random()*1.6+0.4,
-      dx:(Math.random()-.5)*0.25,dy:(Math.random()-.5)*0.25,
-      a:Math.random()*0.55+0.12,
-      col:COLS[Math.floor(Math.random()*3)],
-    }));
-    const LINK=150;
-    const anim=()=>{
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      for(let i=0;i<nodes.length;i++){
-        for(let j=i+1;j<nodes.length;j++){
-          const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y;
-          const d=Math.sqrt(dx*dx+dy*dy);
-          if(d<LINK){
-            const a=(1-d/LINK)*0.13;
-            ctx.beginPath();ctx.moveTo(nodes[i].x,nodes[i].y);ctx.lineTo(nodes[j].x,nodes[j].y);
-            ctx.strokeStyle=`rgba(126,232,162,${a})`;ctx.lineWidth=0.6;ctx.stroke();
-          }
-        }
-      }
-      nodes.forEach(p=>{
-        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle=`rgba(${p.col},${p.a})`;ctx.fill();
-        p.x+=p.dx;p.y+=p.dy;
-        if(p.x<0||p.x>canvas.width)p.dx*=-1;if(p.y<0||p.y>canvas.height)p.dy*=-1;
-      });
-      animId=requestAnimationFrame(anim);
-    };anim();
-    return()=>{cancelAnimationFrame(animId);window.removeEventListener("resize",resize);};
-  },[]);
-  return <canvas ref={ref} id="heroCanvas"/>;
-}
-
-// ══════════════════════════════════════════════════════════
-//  ADVANCED CURSOR — ring + comet trail + orbit dots + particles
-// ══════════════════════════════════════════════════════════
-function CursorFX(){
-  const innerRef=useRef(null);
-  const outerRef=useRef(null);
-  const trailRef=useRef(null);
-  const mouse=useRef({x:-300,y:-300});
-  const smoothPos=useRef({x:-300,y:-300});
-  const isLink=useRef(false);
-  const trailPts=useRef([]);
-  const sparks=useRef([]);
-
-  useEffect(()=>{
-    const mob=window.matchMedia("(max-width:768px)").matches;
-    if(mob)return;
-    const canvas=trailRef.current,ctx=canvas.getContext("2d");
-    const inner=innerRef.current,outer=outerRef.current;
-    const resize=()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;};
-    resize();window.addEventListener("resize",resize);
-
-    const onMove=e=>{
-      mouse.current={x:e.clientX,y:e.clientY};
-      inner.style.transform=`translate(${e.clientX-5}px,${e.clientY-5}px)`;
-      trailPts.current.push({x:e.clientX,y:e.clientY,t:Date.now()});
-      if(trailPts.current.length>40)trailPts.current.shift();
-      // Spark burst on fast move
-      if(Math.random()<0.3){
-        sparks.current.push({
-          x:e.clientX,y:e.clientY,
-          vx:(Math.random()-.5)*2.5,vy:(Math.random()-.5)*2.5-0.8,
-          life:1,r:Math.random()*2+0.5,
-          hue:[155,195,270,40][Math.floor(Math.random()*4)],
-        });
-      }
-    };
-    const onOver=e=>{isLink.current=!!e.target.closest("a,button,[data-cursor]");};
-    document.addEventListener("mousemove",onMove);
-    document.addEventListener("mouseover",onOver);
-
-    let animId;
-    const draw=()=>{
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      const now=Date.now(),m=mouse.current;
-
-      // Smooth lag for outer ring
-      smoothPos.current.x+=(m.x-smoothPos.current.x)*0.1;
-      smoothPos.current.y+=(m.y-smoothPos.current.y)*0.1;
-      const sp=smoothPos.current;
-
-      // Outer ring
-      const targetSize=isLink.current?44:38;
-      outer.style.width=targetSize+"px";outer.style.height=targetSize+"px";
-      outer.style.transform=`translate(${sp.x-targetSize/2}px,${sp.y-targetSize/2}px)`;
-      outer.style.borderColor=isLink.current?"rgba(255,255,255,0.85)":"rgba(126,232,162,0.6)";
-      outer.style.boxShadow=isLink.current?"0 0 16px rgba(255,255,255,0.25)":"0 0 12px rgba(126,232,162,0.2)";
-      inner.style.background=isLink.current?"#ffffff":"#7ee8a2";
-      inner.style.boxShadow=isLink.current?"0 0 8px rgba(255,255,255,0.6)":"0 0 8px rgba(126,232,162,0.8)";
-
-      // ── Comet trail
-      const tp=trailPts.current;
-      if(tp.length>2){
-        ctx.save();
-        for(let i=2;i<tp.length;i++){
-          const p0=tp[i-1],p1=tp[i];
-          const age=(now-p1.t)/160;
-          const alpha=Math.max(0,1-age)*(i/tp.length)*0.6;
-          ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);
-          ctx.strokeStyle=`rgba(126,232,162,${alpha})`;
-          ctx.lineWidth=(i/tp.length)*4;ctx.lineCap="round";ctx.stroke();
-        }
-        ctx.restore();
-        // Halo at tip
-        const last=tp[tp.length-1];
-        const gr=ctx.createRadialGradient(last.x,last.y,0,last.x,last.y,36);
-        gr.addColorStop(0,"rgba(126,232,162,0.16)");
-        gr.addColorStop(.5,"rgba(91,196,224,0.06)");
-        gr.addColorStop(1,"rgba(0,0,0,0)");
-        ctx.beginPath();ctx.arc(last.x,last.y,36,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
-      }
-
-      // ── Expanding ripple rings
-      for(let i=0;i<5;i++){
-        const phase=((now/1000)+i*0.6)%1;
-        const r=phase*56;
-        const a=(1-phase)*0.07;
-        ctx.beginPath();ctx.arc(m.x,m.y,r,0,Math.PI*2);
-        ctx.strokeStyle=`rgba(126,232,162,${a})`;ctx.lineWidth=0.8;ctx.stroke();
-      }
-
-      // ── Orbiting dots
-      const orbitCount=isLink.current?6:4;
-      for(let i=0;i<orbitCount;i++){
-        const angle=(now*0.0012)+i*(Math.PI*2/orbitCount);
-        const orbitR=isLink.current?26:22;
-        const ox=m.x+Math.cos(angle)*orbitR;
-        const oy=m.y+Math.sin(angle)*orbitR;
-        ctx.beginPath();ctx.arc(ox,oy,1.4,0,Math.PI*2);
-        ctx.fillStyle=`rgba(126,232,162,${0.55+Math.sin(angle*2)*0.2})`;ctx.fill();
-      }
-
-      // ── Spark particles
-      sparks.current=sparks.current.filter(s=>s.life>0);
-      sparks.current.forEach(s=>{
-        s.x+=s.vx;s.y+=s.vy;s.vy-=0.06;s.life-=0.04;s.r*=0.96;
-        ctx.beginPath();ctx.arc(s.x,s.y,Math.max(0.1,s.r),0,Math.PI*2);
-        ctx.fillStyle=`hsla(${s.hue},85%,68%,${s.life*0.7})`;ctx.fill();
-      });
-
-      animId=requestAnimationFrame(draw);
-    };
-    draw();
-    return()=>{cancelAnimationFrame(animId);document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseover",onOver);window.removeEventListener("resize",resize);};
-  },[]);
-
-  return(
-    <>
-      <div ref={innerRef} id="cur-inner"/>
-      <div ref={outerRef} id="cur-outer"/>
-      <canvas ref={trailRef} id="cur-trail-canvas"/>
-    </>
-  );
-}
-
-// ─── NAV ──────────────────────────────────────────────────
-function Nav(){
-  const[scrolled,setScrolled]=useState(false);
-  const[menuOpen,setMenuOpen]=useState(false);
-  useEffect(()=>{const s=()=>setScrolled(window.scrollY>40);window.addEventListener("scroll",s);return()=>window.removeEventListener("scroll",s);},[]);
-  const goTo=id=>{document.getElementById(id)?.scrollIntoView({behavior:"smooth"});setMenuOpen(false);};
-  const items=["about","featured","projects","skills","achievements","contact"];
-  return(
-    <>
-      <nav id="navbar"className={scrolled?"scrolled":""}>
-        <span className="nav-logo">VC.</span>
-        <div className="nav-links">{items.map(id=><button key={id}onClick={()=>goTo(id)}>{id[0].toUpperCase()+id.slice(1)}</button>)}</div>
-        <button className="hamburger"onClick={()=>setMenuOpen(o=>!o)}>
-          <span style={{transform:menuOpen?"rotate(45deg) translateY(6.5px)":"none"}}/>
-          <span style={{opacity:menuOpen?0:1}}/>
-          <span style={{transform:menuOpen?"rotate(-45deg) translateY(-6.5px)":"none"}}/>
-        </button>
-      </nav>
-      {menuOpen&&<div className="mob-menu open">{items.map(id=><button key={id}onClick={()=>goTo(id)}>{id[0].toUpperCase()+id.slice(1)}</button>)}</div>}
-    </>
-  );
-}
-
-// ─── HERO ─────────────────────────────────────────────────
-function Hero(){
-  const goTo=id=>document.getElementById(id)?.scrollIntoView({behavior:"smooth"});
-  return(
-    <section id="hero">
-      <HeroCanvas/>
-      <div className="hero-content">
-        <div className="hero-badge vis"style={{animationDelay:".1s"}}><span/>Available for internships<span/></div>
-        <h1 className="hero-name vis"style={{animationDelay:".22s"}}>Venkata Vahini<br/><span className="grad">Chilukamarri</span></h1>
-        <p className="hero-sub vis"style={{animationDelay:".36s"}}>CS Student · AI/ML Engineer · Full-Stack Developer<br/>Building intelligent systems that solve real problems</p>
-        <div className="hero-btns vis"style={{animationDelay:".5s"}}>
-          <button className="btn-p"onClick={()=>goTo("projects")}>View Projects</button>
-          <button className="btn-g"onClick={()=>goTo("contact")}>Contact Me</button>
-        </div>
-        <div className="hero-stats vis"style={{animationDelay:".65s"}}>
-          {[["9.12","CGPA"],["5","Projects"],["500+","Dataset Records"],["40+","Volunteer Hrs"]].map(([n,l])=>(
-            <div key={l}><div className="stat-n">{n}</div><div className="stat-l">{l}</div></div>
-          ))}
-        </div>
-      </div>
-      <div className="scroll-hint"><span>Scroll</span><div className="sh-line"/></div>
-    </section>
-  );
-}
-
-function About(){
-  return(
-    <section className="sec-sep"><div className="sec"id="about">
-      <div className="about-grid">
-        <AnimatedSection>
-          <div className="sec-lbl">About Me</div>
-          <h2 className="sec-title">Turning Ideas<br/>into Intelligent<br/>Systems</h2>
-          <p style={{color:"var(--t2)",lineHeight:1.85,fontSize:".97rem",marginBottom:16}}>I'm a 3rd-year Computer Science student at KMIT, Hyderabad (CGPA: 9.12), focused on building AI-based systems and full-stack applications that solve real-world problems.</p>
-          <p style={{color:"var(--t2)",lineHeight:1.85,fontSize:".97rem",marginBottom:16}}>I developed an LLM evaluation engine to analyze, compare, and improve model-generated responses for reliability. My work spans NLP, computer vision, and data-driven systems.</p>
-          <p style={{color:"var(--t2)",lineHeight:1.85,fontSize:".97rem",marginBottom:28}}>Skilled in Python, deep learning frameworks, and backend development — seeking a Software Engineering or AI/ML internship.</p>
-          <div style={{display:"flex",gap:9,flexWrap:"wrap"}}>
-            {["KMIT · CGPA 9.12","Hyderabad, India","Expected June 2027"].map(t=>(<span key={t}className="chip">{t}</span>))}
-          </div>
-        </AnimatedSection>
-        <AnimatedSection delay={0.14}className="info-cards">
-          {[{ico:"🤖",lbl:"AI / ML",dsc:"LLMs, NLP, Vision Transformers"},{ico:"⚡",lbl:"Full-Stack",dsc:"MERN, FastAPI, REST"},{ico:"🔬",lbl:"Research",dsc:"LLM Eval, RAG, Hallucination Detection"},{ico:"🎨",lbl:"Design",dsc:"Graphic Design, Visual Branding"}].map(c=>(
-            <div key={c.lbl}className="icard"><div className="ico">{c.ico}</div><div className="lbl">{c.lbl}</div><div className="dsc">{c.dsc}</div></div>
-          ))}
-        </AnimatedSection>
-      </div>
-    </div></section>
-  );
-}
-
-function Featured(){
-  const[readmeOpen,setReadmeOpen]=useState(false);
-  const openResume=()=>window.open("https://drive.google.com/file/d/1I0B4qBvireOUrNzFIIT5IQZqH9Exn0N-/view?usp=sharing","_blank");
-  return(
-    <section className="sec-sep"id="featured">
-      <div className="sec">
-        <AnimatedSection><div className="sec-lbl">Featured</div><h2 className="sec-title">Connect & Explore</h2></AnimatedSection>
-        <div className="featured-grid">
-          <AnimatedSection delay={0.08}>
-            <a href="https://linkedin.com/in/vahini"target="_blank"rel="noreferrer"className="feat-card feat-li"style={{display:"block"}}>
-              <div className="feat-bg"/><div className="feat-card-inner">
-                <span className="feat-badge">LinkedIn</span>
-                <div className="feat-title">Let's Connect<br/>Professionally</div>
-                <div className="feat-desc">Find my work experience, endorsements, and professional network on LinkedIn. Always open to opportunities and collaborations.</div>
-                <div className="feat-arrow"><svg width="14"height="14"viewBox="0 0 24 24"fill="currentColor"><path d="M19 0H5C2.239 0 0 2.239 0 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5V5c0-2.761-2.238-5-5-5zm-11 19H5V8h3v11zM6.5 6.732c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zM20 19h-3v-5.604c0-3.368-4-3.113-4 0V19h-3V8h3v1.765c1.396-2.586 7-2.777 7 2.476V19z"/></svg>View Profile →</div>
-              </div>
-            </a>
-          </AnimatedSection>
-          <AnimatedSection delay={0.16}>
-            <div className="feat-card feat-resume"onClick={openResume}style={{cursor:"pointer"}}>
-              <div className="feat-bg"/><div className="feat-card-inner">
-                <span className="feat-badge">Resume</span>
-                <div className="feat-title">Download My<br/>Full Resume</div>
-                <div className="feat-desc">View my complete resume including education, experience, projects, and skills. Updated with the latest achievements.</div>
-                <div className="feat-arrow"style={{color:"var(--accent)"}}><svg width="14"height="14"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Open Resume →</div>
-                <div className="resume-pill"><div style={{fontFamily:"var(--df)",fontSize:".72rem",color:"var(--accent)",fontWeight:600,marginBottom:4}}>📄 VENKATA_VAHINI_RESUME.pdf</div><div style={{fontSize:".7rem",color:"var(--t3)"}}>CS Student · AI/ML · Full-Stack</div></div>
-              </div>
-            </div>
-          </AnimatedSection>
-          <AnimatedSection delay={0.24}>
-            <div className="feat-card feat-gh"onClick={()=>setReadmeOpen(o=>!o)}style={{cursor:"pointer"}}>
-              <div className="feat-bg"/><div className="feat-card-inner">
-                <span className="feat-badge">GitHub</span>
-                <div className="feat-title">vahinichilukamarri<wbr/>/vahinichilukamarri</div>
-                <div className="feat-desc">A collection of development projects demonstrating practical skills. Actively practicing DSA to improve problem-solving and coding efficiency.</div>
-                <div className="feat-arrow"><svg width="13"height="13"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><polyline points={readmeOpen?"18 15 12 9 6 15":"6 9 12 15 18 9"}/></svg>{readmeOpen?"Collapse ↑":"Read More →"}</div>
-              </div>
-              <div className={`readme-panel ${readmeOpen?"open":""}`}>
-                <div className="readme-content">
-                  <h3>👋 Hi, I'm Vahini Chilukamarri</h3>
-                  <p>A passionate Computer Science student building intelligent, practical applications at the intersection of AI and full-stack engineering.</p>
-                  <h3 style={{marginTop:14}}>What I Work On</h3>
-                  <ul><li>AI/ML systems — LLM evaluation, NLP, computer vision</li><li>Full-stack applications — MERN, FastAPI, React, Node.js</li><li>Data-driven tools — business intelligence, diagnostic support</li></ul>
-                  <a href="https://github.com/vahinichilukamarri"target="_blank"rel="noreferrer"style={{display:"inline-flex",alignItems:"center",gap:6,color:"#c4a7e7",fontSize:".82rem",fontFamily:"var(--df)",fontWeight:600,marginTop:8}}onClick={e=>e.stopPropagation()}>Visit GitHub Profile →</a>
-                </div>
-              </div>
-            </div>
-          </AnimatedSection>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Projects(){
-  return(
-    <section className="sec-sep"><div className="sec"id="projects">
-      <AnimatedSection><div className="sec-lbl">Work</div><h2 className="sec-title">Selected Projects</h2></AnimatedSection>
-      <div className="proj-grid">
-        {PROJECTS.map((p,i)=>(
-          <AnimatedSection key={p.title}delay={i*.07}>
-            <div className="pcard"
-              onMouseEnter={e=>{const el=e.currentTarget;el.style.borderColor=p.color+"55";el.style.background="rgba(255,255,255,.05)";el.style.transform="translateY(-4px)";el.style.boxShadow=`0 14px 52px ${p.color}16`;el.querySelector(".gh-ico").style.color=p.color;}}
-              onMouseLeave={e=>{const el=e.currentTarget;el.style.borderColor="var(--border)";el.style.background="var(--card)";el.style.transform="none";el.style.boxShadow="none";el.querySelector(".gh-ico").style.color="var(--t3)";}}>
-              <div className="pcard-top"style={{background:`linear-gradient(90deg,transparent,${p.color}70,transparent)`}}/>
-              <div className="pcard-head">
-                <span className="pbadge"style={{color:p.color,background:p.color+"18",border:`1px solid ${p.color}30`}}>{p.badge}</span>
-                <a className="gh-ico"href={p.gh}target="_blank"rel="noreferrer"><GithubIcon/></a>
-              </div>
-              {p.db&&<div className="db-badge"><div className="db-dot"/>MongoDB Connected</div>}
-              <div className="ptitle">{p.title}</div><div className="psub">{p.sub}</div>
-              <div className="pdesc">{p.desc}</div>
-              <ul className="phl">{p.hl.map(h=><li key={h}><span style={{color:p.color,flexShrink:0,marginTop:2}}>›</span>{h}</li>)}</ul>
-              <div className="pstack">{p.stack.map(s=><span key={s}className="tag">{s}</span>)}</div>
-            </div>
-          </AnimatedSection>
-        ))}
-      </div>
-    </div></section>
-  );
-}
-
-function Skills(){
-  return(
-    <section className="sec-sep"><div className="sec"id="skills">
-      <AnimatedSection><div className="sec-lbl">Expertise</div><h2 className="sec-title">Technical Skills</h2></AnimatedSection>
-      <div className="skill-grid">
-        {SKILLS.map((s,i)=>(
-          <AnimatedSection key={s.cat}delay={i*.06}>
-            <div className="scard"
-              onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color+"55";e.currentTarget.style.background="var(--card-h)";e.currentTarget.style.transform="translateY(-3px)";}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.background="var(--card)";e.currentTarget.style.transform="none";}}>
-              <div className="scard-top"style={{background:`linear-gradient(90deg,transparent,${s.color}60,transparent)`}}/>
-              <div className="scard-head"><span className="sico"style={{color:s.color}}>{s.ico}</span><span className="sname">{s.cat}</span></div>
-              <div className="pills">{s.items.map(it=><span key={it}className="pill"style={{color:s.color,background:s.color+"12",border:`1px solid ${s.color}2e`}}>{it}</span>)}</div>
-            </div>
-          </AnimatedSection>
-        ))}
-      </div>
-    </div></section>
-  );
-}
-
-function Achievements(){
-  return(
-    <section className="sec-sep"><div className="sec"id="achievements">
-      <AnimatedSection><div className="sec-lbl">Recognition</div><h2 className="sec-title">Certifications &<br/>Achievements</h2></AnimatedSection>
-      <AnimatedSection delay={0.1}className="ach-grid">
-        <div>
-          <div className="ach-st">Certifications</div>
-          <div className="ach-list">{CERTS.map(c=>(
-            <div key={c.title}className="aitem"onMouseEnter={e=>{e.currentTarget.style.borderColor=c.color+"60";e.currentTarget.style.transform="translateX(4px)";}}onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.transform="none";}}>
-              <div className="aico"style={{background:c.color+"18"}}>{c.ico}</div>
-              <div><div className="atitle">{c.title}</div><div className="adesc">{c.org}</div></div>
-            </div>
-          ))}</div>
-        </div>
-        <div>
-          <div className="ach-st">Achievements</div>
-          <div className="ach-list">{ACHS.map(a=>(
-            <div key={a.title}className="aitem"onMouseEnter={e=>{e.currentTarget.style.borderColor=a.color+"60";e.currentTarget.style.transform="translateX(4px)";}}onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.transform="none";}}>
-              <div className="aico"style={{background:a.color+"18"}}>{a.ico}</div>
-              <div><div className="atitle">{a.title}</div><div className="adesc">{a.desc}</div></div>
-            </div>
-          ))}</div>
-        </div>
-      </AnimatedSection>
-    </div></section>
-  );
-}
-
-function Contact(){
-  const[msg,setMsg]=useState({text:"",type:""});
-  const handleForm=e=>{
-    e.preventDefault();
-    const n=e.target.fn.value.trim(),em=e.target.fe.value.trim(),m=e.target.fm.value.trim();
-    if(!n||!em||!m){setMsg({text:"Please fill in all fields.",type:"err"});return;}
-    setMsg({text:"✓ Message received! I'll get back to you soon.",type:"ok"});
-    e.target.reset();setTimeout(()=>setMsg({text:"",type:""}),4500);
+  const findRepo = q => {
+    if (!q) return null;
+    const n = parseInt(q, 10);
+    if (!Number.isNaN(n) && repos[n - 1]) return repos[n - 1];
+    return repos.find(r => r.slug.includes(q.toLowerCase())) || null;
   };
-  return(
-    <section className="sec-sep"><div className="sec"id="contact">
-      <AnimatedSection><div className="sec-lbl">Let's Talk</div><h2 className="sec-title">Get In Touch</h2></AnimatedSection>
-      <div className="contact-grid">
-        <AnimatedSection delay={0.1}className="cinfo">
-          <p>I'm currently looking for Software Engineering or AI/ML internship opportunities. If you'd like to work together or just say hi, reach out.</p>
-          <div className="clist">
-            {[{ico:"✉",lbl:"Email",val:"vahinivenkatac@gmail.com",href:"mailto:vahinivenkatac@gmail.com"},{ico:"⌥",lbl:"GitHub",val:"github.com/vahinichilukamarri",href:"https://github.com/vahinichilukamarri"},{ico:"◈",lbl:"LinkedIn",val:"linkedin.com/in/vahini",href:"https://linkedin.com/in/vahini"},{ico:"◎",lbl:"Location",val:"Hyderabad, India",href:null},{ico:"📞",lbl:"Phone",val:"+91 8790261823",href:null}].map(c=>(
-              <div key={c.lbl}className="citem"onMouseEnter={e=>{e.currentTarget.style.borderColor="var(--border-h)";e.currentTarget.style.transform="translateX(4px)";}}onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.transform="none";}}>
-                <span className="c-ico">{c.ico}</span>
-                <div><div className="c-lbl">{c.lbl}</div>{c.href?<a className="c-val"href={c.href}target={c.href.startsWith("http")?"_blank":undefined}rel="noreferrer">{c.val}</a>:<span className="c-val">{c.val}</span>}</div>
+
+  const run = raw => {
+    const parts = raw.trim().split(/\s+/);
+    const cmd = (parts[0] || "").toLowerCase();
+    const arg = parts.slice(1).join(" ");
+
+    switch (cmd) {
+      case "":
+        return [];
+      case "help":
+        return [
+          "available commands:",
+          "  help              show this list",
+          "  ls / repos        list repositories",
+          "  whoami            about vahini",
+          "  stack             tech stack",
+          "  cat resume        resume link",
+          "  cat <repo>        repo description",
+          "  open <repo|#>     open repo on github",
+          "  experience        salesforce mentorship",
+          "  achievements      awards & activities",
+          "  certs             certifications",
+          "  contact           how to reach me",
+          "  clear             clear the terminal",
+        ];
+      case "ls":
+      case "repos":
+        return repos.map((r, i) => `${i + 1}. ${r.slug.padEnd(34)} ${r.sub}`);
+      case "whoami":
+      case "about":
+        return [
+          "vahini chilukamarri",
+          "4th-year cs @ kmit, hyderabad · cgpa 9.12",
+          "ai/ml engineer · full-stack developer",
+          "status: open to internships",
+        ];
+      case "stack":
+        return STACK.flatMap(s => [`${s.cat}:`, `  ${s.items.join(", ")}`]);
+      case "cat":
+        if (!arg) return ["usage: cat <resume|repo-name>"];
+        if (/resume/i.test(arg)) return [`resume → ${LINKS.resume}`];
+        {
+          const r = findRepo(arg);
+          if (r) return [r.title, r.desc, `stack: ${r.stack.join(", ")}`, `source: ${r.gh}`];
+        }
+        return [`cat: ${arg}: no such file`];
+      case "open":
+        if (/linkedin/i.test(arg)) { window.open(LINKS.linkedin, "_blank"); return ["opening linkedin ↗"]; }
+        if (/portfolio/i.test(arg)) { window.open(LINKS.portfolio, "_blank"); return ["opening portfolio ↗"]; }
+        {
+          const r = findRepo(arg);
+          if (r) { window.open(r.gh, "_blank"); return [`opening ${r.slug} ↗`]; }
+        }
+        return [`open: ${arg || "?"} — not found, try 'ls'`];
+      case "experience":
+        return [`${EXPERIENCE.org} — ${EXPERIENCE.when}`, EXPERIENCE.role, ...EXPERIENCE.points.map(p => `  - ${p}`)];
+      case "achievements":
+        return ACHIEVEMENTS.map(a => `- ${a.t}: ${a.d}`);
+      case "certs":
+        return CERTS.map(c => `- ${c.t} (${c.o})`);
+      case "contact":
+        return [`email  → ${LINKS.email}`, `github → ${LINKS.github}`, `phone  → ${LINKS.phone}`];
+      case "sudo":
+        return ["permission denied: vahini is not in the sudoers file. this incident will be reported. (jk — try 'help')"];
+      case "clear":
+        return null;
+      default:
+        return [`command not found: ${cmd} — type 'help'`];
+    }
+  };
+
+  return { run, repos };
+}
+
+/* ══════════════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════════════ */
+function Reveal({ children, delay = 0, className = "" }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); o.disconnect(); } }, { threshold: 0.12 });
+    if (ref.current) o.observe(ref.current);
+    return () => o.disconnect();
+  }, []);
+  return <div ref={ref} className={`reveal ${visible ? "in" : ""} ${className}`} style={{ transitionDelay: `${delay}s` }}>{children}</div>;
+}
+
+function Eyebrow({ num, children }) {
+  return (
+    <div className="flex items-center gap-3 font-mono text-xs tracking-[0.25em] text-[var(--muted)] uppercase">
+      <span className="text-[var(--violet)]">{num}</span>
+      <span className="h-px w-8 bg-[var(--border-hi)]" />
+      {children}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   BACKDROP — animated gradient mesh + drifting grid
+   ══════════════════════════════════════════════════════════ */
+function Backdrop() {
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-[var(--bg)]">
+      <div className="absolute inset-0 bg-grid opacity-40" />
+      <div className="animate-blob absolute -top-40 -left-40 h-[36rem] w-[36rem] rounded-full bg-[var(--indigo)]/25 blur-[120px]" />
+      <div className="animate-blob-slow absolute top-1/3 -right-40 h-[30rem] w-[30rem] rounded-full bg-[var(--cyan)]/15 blur-[120px]" />
+      <div className="animate-blob absolute bottom-0 left-1/4 h-[26rem] w-[26rem] rounded-full bg-[var(--amber)]/10 blur-[130px]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg)]" />
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   NAV
+   ══════════════════════════════════════════════════════════ */
+function Nav() {
+  const [active, setActive] = useState("hero");
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+      const y = window.scrollY + window.innerHeight * 0.35;
+      let cur = "hero";
+      NAV.forEach(n => { const el = document.getElementById(n.id); if (el && el.offsetTop <= y) cur = n.id; });
+      setActive(cur);
+    };
+    window.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const goTo = id => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setOpen(false); };
+
+  return (
+    <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled ? "bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)]" : "bg-transparent"}`}>
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <button onClick={() => goTo("hero")} className="font-display text-lg font-bold tracking-tight">
+          VC<span className="text-[var(--violet)]">.</span>
+        </button>
+        <nav className="hidden lg:flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 backdrop-blur-xl">
+          {NAV.map(n => (
+            <button
+              key={n.id}
+              onClick={() => goTo(n.id)}
+              className={`rounded-full px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-all ${active === n.id ? "bg-white text-black" : "text-[var(--muted)] hover:text-[var(--ink)]"}`}
+            >
+              {n.label}
+            </button>
+          ))}
+        </nav>
+        <a href={LINKS.resume} target="_blank" rel="noreferrer" className="hidden lg:inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--indigo)] px-5 py-2 font-mono text-[11px] uppercase tracking-wider text-white shadow-lg shadow-[var(--indigo)]/25 transition-transform hover:scale-105">
+          Resume ↗
+        </a>
+        <button onClick={() => setOpen(o => !o)} className="lg:hidden flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full border border-[var(--border)]" aria-label="Menu">
+          <span className={`h-px w-5 bg-[var(--ink)] transition-transform ${open ? "translate-y-[3px] rotate-45" : ""}`} />
+          <span className={`h-px w-5 bg-[var(--ink)] transition-opacity ${open ? "opacity-0" : ""}`} />
+          <span className={`h-px w-5 bg-[var(--ink)] transition-transform ${open ? "-translate-y-[3px] -rotate-45" : ""}`} />
+        </button>
+      </div>
+      {open && (
+        <div className="lg:hidden border-t border-[var(--border)] bg-[var(--bg)]/95 backdrop-blur-xl px-6 py-4">
+          {NAV.map(n => (
+            <button key={n.id} onClick={() => goTo(n.id)} className="flex w-full items-center justify-between border-b border-[var(--border)] py-3 font-mono text-sm uppercase tracking-wider text-[var(--muted)] last:border-0">
+              {n.label}<span className="text-[var(--violet)]">{n.num}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </header>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   HERO
+   ══════════════════════════════════════════════════════════ */
+function Ticker() {
+  const [i, setI] = useState(0);
+  const [text, setText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const full = TICKER[i];
+    const speed = deleting ? 22 : 34;
+    const t = setTimeout(() => {
+      if (!deleting) {
+        setText(full.slice(0, text.length + 1));
+        if (text.length + 1 === full.length) setTimeout(() => setDeleting(true), 1400);
+      } else {
+        setText(full.slice(0, text.length - 1));
+        if (text.length === 0) { setDeleting(false); setI(v => (v + 1) % TICKER.length); }
+      }
+    }, speed);
+    return () => clearTimeout(t);
+  }, [text, deleting, i]);
+
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 backdrop-blur-xl">
+      <span className="h-2 w-2 rounded-full bg-[var(--cyan)] shadow-[0_0_10px_var(--cyan)]" />
+      <span className="font-mono text-xs text-[var(--muted)]">
+        <span className="text-[var(--ink)]">$</span> {text}<span className="animate-caret text-[var(--cyan)]">▍</span>
+      </span>
+    </div>
+  );
+}
+
+function Hero() {
+  const goTo = id => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  return (
+    <section id="hero" className="relative flex min-h-screen items-center px-6 pt-28 pb-16">
+      <div className="mx-auto w-full max-w-7xl">
+        <Reveal>
+          <Ticker />
+        </Reveal>
+        <Reveal delay={0.08}>
+          <h1 className="font-display mt-8 text-[15vw] leading-[0.92] font-bold tracking-tight sm:text-[9vw] lg:text-[6.4rem]">
+            Vahini<br />
+            <span className="bg-gradient-to-r from-[var(--violet)] via-[var(--indigo)] to-[var(--cyan)] bg-clip-text text-transparent">
+              Chilukamarri
+            </span>
+          </h1>
+        </Reveal>
+        <Reveal delay={0.16} className="mt-8 grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end">
+          <div>
+            <div className="flex flex-wrap gap-2 font-mono text-xs uppercase tracking-wider text-[var(--muted)]">
+              <span className="rounded-full border border-[var(--border)] px-3 py-1">AI / ML Engineer</span>
+              <span className="rounded-full border border-[var(--border)] px-3 py-1">Full-Stack Developer</span>
+              <span className="rounded-full border border-[var(--violet)]/30 bg-[var(--violet)]/10 px-3 py-1 text-[var(--violet)]">Open to Internships</span>
+            </div>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--muted)]">
+              4th-year CS student at KMIT building the parts of AI systems that have to actually work in production —
+              evaluation pipelines, retrieval backends, distributed observability, and the full-stack scaffolding around them.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button onClick={() => goTo("work")} className="rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--indigo)] px-6 py-3 font-mono text-xs uppercase tracking-wider text-white shadow-lg shadow-[var(--indigo)]/25 transition-transform hover:scale-105">
+                See the Work →
+              </button>
+              <button onClick={() => goTo("contact")} className="rounded-full border border-[var(--border-hi)] px-6 py-3 font-mono text-xs uppercase tracking-wider text-[var(--ink)] transition-colors hover:border-[var(--violet)]/50 hover:text-[var(--violet)]">
+                Get in Touch
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[["9.12", "CGPA"], ["5", "Shipped Builds"], ["2027", "Graduating"], ["1", "Mentorship, Salesforce"]].map(([n, l]) => (
+              <div key={l} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 backdrop-blur-xl">
+                <div className="font-display text-2xl font-bold text-[var(--ink)]">{n}</div>
+                <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[var(--muted)]">{l}</div>
               </div>
             ))}
           </div>
-        </AnimatedSection>
-        <AnimatedSection delay={0.2}className="cform-wrap">
-          <form onSubmit={handleForm}>
-            <div className="frow">
-              <div className="fg"style={{marginBottom:0}}><label>Name</label><input name="fn"placeholder="Your name"/></div>
-              <div className="fg"style={{marginBottom:0}}><label>Email</label><input name="fe"type="email"placeholder="your@email.com"/></div>
-            </div>
-            <div className="fg"><label>Message</label><textarea name="fm"rows="5"placeholder="Tell me about your project or opportunity..."/></div>
-            {msg.text&&<div className={`fmsg ${msg.type}`}>{msg.text}</div>}
-            <button type="submit"className="btn-p"style={{marginTop:10,width:"100%"}}>Send Message →</button>
-          </form>
-        </AnimatedSection>
+        </Reveal>
       </div>
-    </div></section>
+    </section>
   );
 }
 
-function Footer(){
-  return(
-    <footer>
-      <span className="nav-logo">VC.</span>
-      <p className="fcopy">© 2025 Venkata Vahini Chilukamarri · Built with ♥</p>
-      <div className="flinks">
-        <a href="https://github.com/vahinichilukamarri"target="_blank"rel="noreferrer">GitHub</a>
-        <a href="https://linkedin.com/in/vahini"target="_blank"rel="noreferrer">LinkedIn</a>
-        <a href="mailto:vahinivenkatac@gmail.com">Email</a>
+/* ══════════════════════════════════════════════════════════
+   ABOUT
+   ══════════════════════════════════════════════════════════ */
+function About() {
+  return (
+    <section id="about" className="relative px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <Reveal><Eyebrow num="01">About</Eyebrow></Reveal>
+        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">The person behind the commits</h2></Reveal>
+
+        <div className="mt-12 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
+          <Reveal delay={0.1} className="space-y-5 text-lg leading-relaxed text-[var(--muted)]">
+            <p>I'm a <b className="text-[var(--ink)]">4th-year Computer Science student at KMIT, Hyderabad</b> (CGPA 9.12), specializing in AI & Data Science, currently mentored through the <b className="text-[var(--ink)]">Salesforce Mentorship Program</b> on a microservice health and API performance orchestrator.</p>
+            <p>Most of what I build sits at the intersection of <b className="text-[var(--ink)]">LLM systems, distributed observability, and full-stack engineering</b> — dependency graphs discovered from trace spans, evaluation pipelines that judge other models, and the dashboards that make all of it usable.</p>
+            <p>Outside of coursework, I'm on a structured prep track across DSA, system design, and AI engineering depth — and I contribute remotely to <b className="text-[var(--ink)]">Rewriting the Code</b>, a nonprofit supporting women in tech.</p>
+            <div className="flex flex-wrap gap-2 pt-2">
+              {["KMIT · CGPA 9.12", "Hyderabad, India", "Expected 2027", "Salesforce Mentee"].map(t => (
+                <span key={t} className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-mono text-[11px] text-[var(--muted)]">{t}</span>
+              ))}
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.16}>
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 backdrop-blur-xl">
+              <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[var(--violet)] to-[var(--indigo)] font-display font-bold text-white">VC</div>
+                <span className="rounded-full bg-[var(--cyan)]/10 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[var(--cyan)]">Verified</span>
+              </div>
+              {[["Subject", "Vahini Chilukamarri"], ["Role", "AI / ML Engineer"], ["Base", "Hyderabad, India"], ["Institution", "KMIT"], ["Focus", "LLM Systems · Distributed Systems"], ["Status", "Open to internships"]].map(([k, v]) => (
+                <div key={k} className="flex items-center justify-between border-b border-[var(--border)] py-3 font-mono text-xs last:border-0">
+                  <span className="text-[var(--muted-2)] uppercase tracking-wider">{k}</span>
+                  <span className="text-[var(--ink)]">{v}</span>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+
+        <Reveal delay={0.2} className="mt-6 grid gap-4 sm:grid-cols-3">
+          {[
+            { tag: "Resume", h: "Read the full file", d: "Education, experience, and every project — updated with the latest work.", go: "Open PDF ↗", href: LINKS.resume },
+            { tag: "GitHub", h: "vahinichilukamarri", d: "Every repo referenced on this page lives here, plus ongoing DSA practice.", go: "Visit profile ↗", href: LINKS.github },
+            { tag: "Portfolio", h: "vahini-dev.vercel.app", d: "This site, live — always reflects the current build.", go: "Open site ↗", href: LINKS.portfolio },
+          ].map(f => (
+            <a key={f.tag} href={f.href} target="_blank" rel="noreferrer" className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 backdrop-blur-xl transition-all hover:border-[var(--violet)]/40 hover:bg-[var(--surface-hi)]">
+              <div className="font-mono text-[10px] uppercase tracking-wider text-[var(--violet)]">{f.tag}</div>
+              <div className="font-display mt-2 text-lg font-bold">{f.h}</div>
+              <div className="mt-2 text-sm text-[var(--muted)]">{f.d}</div>
+              <div className="mt-4 font-mono text-xs text-[var(--cyan)] transition-transform group-hover:translate-x-1">{f.go}</div>
+            </a>
+          ))}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   EXPERIENCE
+   ══════════════════════════════════════════════════════════ */
+function Experience() {
+  return (
+    <section id="experience" className="relative px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <Reveal><Eyebrow num="02">Experience</Eyebrow></Reveal>
+        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Mentored, shipped, live</h2></Reveal>
+
+        <Reveal delay={0.12} className="mt-12 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] backdrop-blur-xl">
+          <div className="flex flex-col justify-between gap-4 border-b border-[var(--border)] p-8 sm:flex-row sm:items-center">
+            <div>
+              <div className="font-mono text-xs uppercase tracking-wider text-[var(--violet)]">{EXPERIENCE.when} · {EXPERIENCE.where}</div>
+              <div className="font-display mt-2 text-2xl font-bold">{EXPERIENCE.org}</div>
+              <div className="mt-1 text-[var(--muted)]">{EXPERIENCE.role}</div>
+            </div>
+            <a href={EXPERIENCE.gh} target="_blank" rel="noreferrer" className="shrink-0 rounded-full border border-[var(--border-hi)] px-5 py-2.5 font-mono text-xs uppercase tracking-wider transition-colors hover:border-[var(--violet)]/50 hover:text-[var(--violet)]">
+              View Source ↗
+            </a>
+          </div>
+          <div className="grid gap-6 p-8 lg:grid-cols-[1.5fr_1fr]">
+            <ul className="space-y-4">
+              {EXPERIENCE.points.map(p => (
+                <li key={p} className="flex gap-3 text-[var(--muted)]">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--violet)]" />
+                  <span>{p}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap content-start gap-2">
+              {EXPERIENCE.stack.map(s => (
+                <span key={s} className="rounded-full border border-[var(--violet)]/30 bg-[var(--violet)]/10 px-3 py-1.5 font-mono text-[11px] text-[var(--violet)]">{s}</span>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   WORK / PROJECTS
+   ══════════════════════════════════════════════════════════ */
+function ProjectCard({ p, i }) {
+  const a = ACCENT[p.accent];
+  return (
+    <Reveal delay={i * 0.06}>
+      <div className={`group relative overflow-hidden rounded-3xl border ${a.border} bg-[var(--surface)] p-8 backdrop-blur-xl transition-all hover:bg-[var(--surface-hi)]`}>
+        <div className={`absolute -right-16 -top-16 h-40 w-40 rounded-full ${a.bg} blur-3xl transition-opacity group-hover:opacity-150`} />
+        <div className="relative flex items-start justify-between">
+          <span className={`font-mono text-xs ${a.text}`}>{p.no}</span>
+          <span className={`h-2 w-2 rounded-full ${a.dot}`} />
+        </div>
+        <h3 className="font-display relative mt-4 text-2xl font-bold">{p.title}</h3>
+        <p className={`relative mt-1 font-mono text-xs ${a.text}`}>{p.sub}</p>
+        <p className="relative mt-4 text-sm leading-relaxed text-[var(--muted)]">{p.desc}</p>
+        <ul className="relative mt-4 space-y-2">
+          {p.points.map(pt => (
+            <li key={pt} className="flex gap-2 text-sm text-[var(--muted)]">
+              <span className={`mt-1.5 h-1 w-1 shrink-0 rounded-full ${a.dot}`} />
+              <span>{pt}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="relative mt-6 flex flex-wrap gap-2 border-t border-[var(--border)] pt-5">
+          {p.stack.map(s => <span key={s} className="rounded-full border border-[var(--border)] px-2.5 py-1 font-mono text-[10px] text-[var(--muted)]">{s}</span>)}
+        </div>
+        <a href={p.gh} target="_blank" rel="noreferrer" className={`relative mt-5 inline-flex items-center gap-1 font-mono text-xs ${a.text} transition-transform hover:translate-x-1`}>
+          View source ↗
+        </a>
+      </div>
+    </Reveal>
+  );
+}
+
+function Work() {
+  return (
+    <section id="work" className="relative px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <Reveal><Eyebrow num="03">Work</Eyebrow></Reveal>
+        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Five builds, open for review</h2></Reveal>
+        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {PROJECTS.map((p, i) => <ProjectCard key={p.no} p={p} i={i} />)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   STACK / SKILLS
+   ══════════════════════════════════════════════════════════ */
+function Stack() {
+  return (
+    <section id="stack" className="relative px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <Reveal><Eyebrow num="04">Stack</Eyebrow></Reveal>
+        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">What runs underneath</h2></Reveal>
+        <div className="mt-12 grid gap-5 lg:grid-cols-2">
+          {STACK.map((s, i) => {
+            const a = ACCENT[s.accent];
+            return (
+              <Reveal key={s.cat} delay={i * 0.05}>
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 backdrop-blur-xl">
+                  <div className={`font-mono text-xs uppercase tracking-wider ${a.text}`}>{s.cat}</div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {s.items.map(it => (
+                      <span key={it} className={`rounded-full border ${a.border} ${a.bg} px-3 py-1.5 text-sm ${a.text}`}>{it}</span>
+                    ))}
+                  </div>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   NETWORK — the hand of cards, mimicking a real LinkedIn post
+   ══════════════════════════════════════════════════════════ */
+function Network() {
+  const cards = [...LINKEDIN_POSTS, { seeMore: true }];
+  const n = cards.length;
+  const mid = (n - 1) / 2;
+  return (
+    <section id="network" className="relative px-6 py-24 overflow-hidden">
+      <div className="mx-auto max-w-7xl">
+        <Reveal><Eyebrow num="05">Network</Eyebrow></Reveal>
+        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">A hand from LinkedIn</h2></Reveal>
+
+        <Reveal delay={0.12} className="relative mt-20 flex h-[360px] items-center justify-center sm:h-[400px]">
+          {cards.map((p, i) => {
+            const offset = i - mid;
+            const rot = offset * 8;
+            const tx = offset * 90;
+            const ty = Math.abs(offset) * 16;
+            return (
+              <a
+                key={i}
+                href={p.seeMore ? LINKS.linkedin : p.url}
+                target="_blank"
+                rel="noreferrer"
+                className="absolute flex h-[340px] w-[230px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-[var(--border-hi)] bg-[var(--surface)] shadow-2xl shadow-black/50 backdrop-blur-xl transition-transform duration-300 ease-out sm:h-[360px] sm:w-[250px]"
+                style={{ transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg)`, zIndex: 10 - Math.abs(offset) }}
+                onMouseEnter={e => { e.currentTarget.style.transform = `translate(${tx}px, ${ty - 34}px) rotate(0deg) scale(1.07)`; e.currentTarget.style.zIndex = 50; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(1)`; e.currentTarget.style.zIndex = 10 - Math.abs(offset); }}
+              >
+                {p.seeMore ? (
+                  <div className="flex h-full flex-col items-center justify-center bg-gradient-to-b from-[var(--surface-hi)] to-[var(--surface)] text-center">
+                    <div className="font-display text-3xl text-[var(--violet)]">↗</div>
+                    <div className="mt-3 font-mono text-xs uppercase tracking-wider text-[var(--ink)]">See more on</div>
+                    <div className="font-display text-lg font-bold text-[var(--violet)]">LinkedIn</div>
+                  </div>
+                ) : (
+                  <>
+                    {/* header */}
+                    <div className="flex items-center gap-2 bg-[var(--surface-hi)] px-3 pt-3 pb-2.5">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--violet)] to-[var(--indigo)] font-display text-[11px] font-bold text-white">VC</div>
+                      <div className="min-w-0 leading-tight">
+                        <div className="truncate text-xs font-semibold text-[var(--ink)]">Vahini Chilukamarri</div>
+                        <div className="font-mono text-[9px] text-[var(--muted-2)]">AI/ML Engineer · 1st</div>
+                      </div>
+                      <svg viewBox="0 0 24 24" className="ml-auto h-4 w-4 shrink-0 fill-[#0A66C2]"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>
+                    </div>
+                    {/* hashtags as the "caption" line */}
+                    <div className="flex flex-wrap gap-1 px-3 pb-2 font-mono text-[9px] text-[var(--cyan)]">
+                      {p.tags.map(t => <span key={t}>#{t}</span>)}
+                    </div>
+                    {/* photo */}
+                    <div className="relative flex-1 overflow-hidden bg-[var(--bg)]">
+                      <img src={p.img} alt="LinkedIn post" className="h-full w-full object-cover" />
+                    </div>
+                    {/* engagement row */}
+                    <div className="flex items-center justify-between border-t border-[var(--border)] px-3 py-2.5 font-mono text-[10px] text-[var(--muted-2)]">
+                      <span className="flex items-center gap-1">👍 Like</span>
+                      <span className="flex items-center gap-1">💬 Comment</span>
+                      <span className="flex items-center gap-1 text-[var(--cyan)]">View ↗</span>
+                    </div>
+                  </>
+                )}
+              </a>
+            );
+          })}
+        </Reveal>
+
+        <div className="mt-12 flex justify-center">
+          <a href={LINKS.linkedin} target="_blank" rel="noreferrer" className="rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--indigo)] px-6 py-3 font-mono text-xs uppercase tracking-wider text-white shadow-lg shadow-[var(--indigo)]/25 transition-transform hover:scale-105">
+            View Full Profile ↗
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   TERMINAL — interactive, driven entirely by this page's own data
+   (this replaces the old static "GitHub" repo-list section)
+   ══════════════════════════════════════════════════════════ */
+function Terminal() {
+  const { run, repos } = useTerminalCommands();
+  const [lines, setLines] = useState([
+    { t: "sys", v: "welcome to vahini@terminal — type 'help' or tap a command on the right" },
+  ]);
+  const [input, setInput] = useState("");
+  const [hist, setHist] = useState([]);
+  const [histIdx, setHistIdx] = useState(-1);
+  const scrollRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const exec = raw => {
+    const cmd = raw.trim();
+    if (!cmd) return;
+    setLines(l => [...l, { t: "cmd", v: cmd }]);
+    if (cmd.toLowerCase() === "clear") { setLines([]); setHist(h => [...h, cmd]); setHistIdx(-1); return; }
+    const out = run(cmd);
+    if (out && out.length) setLines(l => [...l, ...out.map(v => ({ t: "out", v }))]);
+    setHist(h => [...h, cmd]);
+    setHistIdx(-1);
+  };
+
+  const onSubmit = e => {
+    e.preventDefault();
+    exec(input);
+    setInput("");
+  };
+
+  const onKeyDown = e => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!hist.length) return;
+      const idx = histIdx === -1 ? hist.length - 1 : Math.max(0, histIdx - 1);
+      setHistIdx(idx); setInput(hist[idx]);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (histIdx === -1) return;
+      const idx = histIdx + 1;
+      if (idx >= hist.length) { setHistIdx(-1); setInput(""); }
+      else { setHistIdx(idx); setInput(hist[idx]); }
+    }
+  };
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [lines]);
+
+  const CHEATS = [
+    ["help", "list all commands"],
+    ["ls", "list repositories"],
+    ["whoami", "about vahini"],
+    ["stack", "tech stack"],
+    ["cat resume", "resume link"],
+    [`open ${repos[1]?.slug || "eval-engine"}`, "open a repo"],
+    ["experience", "salesforce mentorship"],
+    ["contact", "get in touch"],
+  ];
+
+  return (
+    <section id="terminal" className="relative px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <Reveal><Eyebrow num="06">Terminal</Eyebrow></Reveal>
+        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Skip the scrolling — just ask</h2></Reveal>
+        <Reveal delay={0.1}><p className="mt-4 max-w-2xl text-[var(--muted)]">A live terminal — type a command yourself, or tap one from the cheat sheet. Everything it answers with comes straight from this page's own data, nothing fetched externally.</p></Reveal>
+
+        <Reveal delay={0.14} className="mt-12 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+          <div
+            className="overflow-hidden rounded-2xl border border-[var(--border-hi)] bg-[#0a0a0f] shadow-2xl shadow-black/40"
+            onClick={() => inputRef.current?.focus()}
+          >
+            <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+              <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
+              <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+              <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
+              <span className="ml-3 font-mono text-[11px] text-[var(--muted-2)]">vahini@terminal:~</span>
+            </div>
+            <div ref={scrollRef} className="h-[360px] overflow-y-auto p-6 font-mono text-[13px] leading-relaxed sm:p-8">
+              {lines.map((l, i) => (
+                <div key={i} className={l.t === "cmd" ? "text-[var(--ink)]" : l.t === "sys" ? "text-[var(--muted-2)]" : "whitespace-pre-wrap text-[var(--muted)]"}>
+                  {l.t === "cmd" ? <><span className="text-[var(--cyan)]">$</span> {l.v}</> : l.v}
+                </div>
+              ))}
+              <form onSubmit={onSubmit} className="mt-1 flex items-center gap-2">
+                <span className="text-[var(--cyan)]">$</span>
+                <input
+                  ref={inputRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={onKeyDown}
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-label="Terminal command input"
+                  className="flex-1 bg-transparent text-[var(--ink)] outline-none"
+                  placeholder="type a command…"
+                />
+                <span className="animate-caret text-[var(--cyan)]">▍</span>
+              </form>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 backdrop-blur-xl">
+            <div className="font-mono text-xs uppercase tracking-wider text-[var(--violet)]">Cheat sheet</div>
+            <div className="mt-4 space-y-2">
+              {CHEATS.map(([c, d]) => (
+                <button
+                  key={c}
+                  onClick={() => { exec(c); inputRef.current?.focus(); }}
+                  className="flex w-full items-center justify-between gap-3 rounded-lg border border-transparent px-3 py-2 text-left transition-colors hover:border-[var(--border)] hover:bg-[var(--surface-hi)]"
+                >
+                  <span className="font-mono text-xs text-[var(--cyan)]">{c}</span>
+                  <span className="text-right text-[11px] text-[var(--muted-2)]">{d}</span>
+                </button>
+              ))}
+            </div>
+            <a href={LINKS.github} target="_blank" rel="noreferrer" className="mt-5 flex items-center justify-between border-t border-[var(--border)] pt-4 font-mono text-[11px] text-[var(--muted-2)] transition-colors hover:text-[var(--violet)]">
+              open real github profile ↗
+            </a>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   RECOGNITION — certs + achievements
+   ══════════════════════════════════════════════════════════ */
+function Recognition() {
+  return (
+    <section id="recognition" className="relative px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <Reveal><Eyebrow num="07">Recognition</Eyebrow></Reveal>
+        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Certified, and on record</h2></Reveal>
+
+        <div className="mt-12 grid gap-8 lg:grid-cols-2">
+          <Reveal delay={0.1}>
+            <div className="font-mono text-xs uppercase tracking-wider text-[var(--violet)]">Certifications</div>
+            <div className="mt-4 space-y-3">
+              {CERTS.map((c, i) => (
+                <div key={c.t} className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 backdrop-blur-xl">
+                  <div className="font-display flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--violet)]/10 text-xs font-bold text-[var(--violet)]">{String(i + 1).padStart(2, "0")}</div>
+                  <div>
+                    <div className="text-sm font-semibold text-[var(--ink)]">{c.t}</div>
+                    <div className="text-xs text-[var(--muted)]">{c.o}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+          <Reveal delay={0.16}>
+            <div className="font-mono text-xs uppercase tracking-wider text-[var(--cyan)]">Achievements</div>
+            <div className="mt-4 space-y-3">
+              {ACHIEVEMENTS.map((a, i) => (
+                <div key={a.t} className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 backdrop-blur-xl">
+                  <div className="font-display flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--cyan)]/10 text-xs font-bold text-[var(--cyan)]">{String(i + 1).padStart(2, "0")}</div>
+                  <div>
+                    <div className="text-sm font-semibold text-[var(--ink)]">{a.t}</div>
+                    <div className="text-xs text-[var(--muted)]">{a.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   CONTACT
+   ══════════════════════════════════════════════════════════ */
+function Contact() {
+  const [msg, setMsg] = useState({ text: "", type: "" });
+
+  const handleForm = e => {
+    e.preventDefault();
+    const n = e.target.fn.value.trim(), em = e.target.fe.value.trim(), m = e.target.fm.value.trim();
+    if (!n || !em || !m) { setMsg({ text: "Please fill in all fields.", type: "err" }); return; }
+    const subject = encodeURIComponent(`Portfolio contact — ${n}`);
+    const body = encodeURIComponent(`${m}\n\n—\n${n}\n${em}`);
+    window.location.href = `mailto:${LINKS.email}?subject=${subject}&body=${body}`;
+    setMsg({ text: "✓ Opening your mail client — send when ready.", type: "ok" });
+    setTimeout(() => setMsg({ text: "", type: "" }), 5000);
+  };
+
+  return (
+    <section id="contact" className="relative px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <Reveal><Eyebrow num="08">Contact</Eyebrow></Reveal>
+        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Let's build something</h2></Reveal>
+
+        <div className="mt-12 grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:items-center">
+          <Reveal delay={0.1} className="flex flex-col items-center gap-10 md:flex-row md:items-center md:justify-center lg:justify-start lg:gap-14">
+            <p className="max-w-xs text-lg text-[var(--muted)] text-center md:text-left">Currently looking for Software Engineering or AI/ML internship opportunities. If you'd like to work together, or just say hi — reach out.</p>
+            <ContactWallet />
+          </Reveal>
+          <Reveal delay={0.16}>
+            <form onSubmit={handleForm} className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 backdrop-blur-xl">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted-2)]">Name</label>
+                  <input name="fn" placeholder="Your name" className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 px-4 py-3 text-sm outline-none transition-colors focus:border-[var(--violet)]/50" />
+                </div>
+                <div>
+                  <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted-2)]">Email</label>
+                  <input name="fe" type="email" placeholder="your@email.com" className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 px-4 py-3 text-sm outline-none transition-colors focus:border-[var(--violet)]/50" />
+                </div>
+              </div>
+              <div>
+                <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted-2)]">Message</label>
+                <textarea name="fm" rows="5" placeholder="Tell me about your project or opportunity..." className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 px-4 py-3 text-sm outline-none transition-colors focus:border-[var(--violet)]/50" />
+              </div>
+              {msg.text && <div className={`font-mono text-xs ${msg.type === "ok" ? "text-[var(--cyan)]" : "text-[var(--amber)]"}`}>{msg.text}</div>}
+              <button type="submit" className="w-full rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--indigo)] py-3.5 font-mono text-xs uppercase tracking-wider text-white shadow-lg shadow-[var(--indigo)]/25 transition-transform hover:scale-[1.02]">
+                Send via Mail →
+              </button>
+            </form>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-[var(--border)] px-6 py-10">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
+        <div className="font-mono text-[11px] text-[var(--muted-2)]">© 2026 Vahini Chilukamarri · built with intent</div>
+        <div className="flex gap-6 font-mono text-[11px] uppercase tracking-wider text-[var(--muted)]">
+          <a href={LINKS.github} target="_blank" rel="noreferrer" className="transition-colors hover:text-[var(--violet)]">GitHub</a>
+          <a href={LINKS.linkedin} target="_blank" rel="noreferrer" className="transition-colors hover:text-[var(--violet)]">LinkedIn</a>
+          <a href={`mailto:${LINKS.email}`} className="transition-colors hover:text-[var(--violet)]">Email</a>
+        </div>
       </div>
     </footer>
   );
 }
 
-export default function App(){
-  return(
-    <>
-      <NebulaBackground/>
-      <CursorFX/>
-      <Nav/>
-      <Hero/>
-      <About/>
-      <Featured/>
-      <Projects/>
-      <Skills/>
-      <Achievements/>
-      <Contact/>
-      <Footer/>
-    </>
+export default function App() {
+  return (
+    <div className="relative min-h-screen">
+      <Cursor />
+      <Backdrop />
+      <Nav />
+      <Hero />
+      <About />
+      <Experience />
+      <Work />
+      <Stack />
+      <Network />
+      <Terminal />
+      <Recognition />
+      <Contact />
+      <Footer />
+    </div>
   );
 }
