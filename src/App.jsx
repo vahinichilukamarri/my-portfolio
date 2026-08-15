@@ -416,7 +416,7 @@ function About() {
 
         <div className="mt-12 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
           <Reveal delay={0.1} className="space-y-5 text-lg leading-relaxed text-[var(--muted)]">
-            <p>I'm a <b className="text-[var(--ink)]">4th-year Computer Science student at KMIT, Hyderabad</b> (CGPA 9.12), specializing in AI & Data Science, currently mentored through the <b className="text-[var(--ink)]">Salesforce Mentorship Program</b> on a microservice health and API performance orchestrator.</p>
+            <p>I'm a <b className="text-[var(--ink)]">4th-year Computer Science student at KMIT, Hyderabad</b> (CGPA 9.12), currently mentored through the <b className="text-[var(--ink)]">Salesforce Mentorship Program</b> on a microservice health and API performance orchestrator.</p>
             <p>Most of what I build sits at the intersection of <b className="text-[var(--ink)]">LLM systems, distributed observability, and full-stack engineering</b> — dependency graphs discovered from trace spans, evaluation pipelines that judge other models, and the dashboards that make all of it usable.</p>
             <p>Outside of coursework, I'm on a structured prep track across DSA, system design, and AI engineering depth — and I contribute remotely to <b className="text-[var(--ink)]">Rewriting the Code</b>, a nonprofit supporting women in tech.</p>
             <div className="flex flex-wrap gap-2 pt-2">
