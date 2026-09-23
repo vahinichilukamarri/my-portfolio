@@ -21,7 +21,7 @@ const LINKS = {
   portfolio: "https://vahini-dev.vercel.app/",
   email: "vahinivenkatac@gmail.com",
   phone: "+91 8790261823",
-  resume: "https://drive.google.com/file/d/1M56gX1bDiletvw2IyHBUeyjhhDRHmXUH/view?usp=sharing",
+  resume: "https://drive.google.com/file/d/1hvl7eQHsGslxknRLoo8KhHc6KwRSmLvY/view?usp=sharing",
 };
 
 const NAV = [
