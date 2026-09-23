@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "./ContactWallet.css";
 
 const CARDS = [
@@ -44,8 +45,16 @@ const CARDS = [
 ];
 
 export default function ContactWallet() {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="cw-wallet">
+    <div
+      className={`cw-wallet ${open ? "cw-wallet--open" : ""}`}
+      onClick={() => setOpen(o => !o)}
+      role="button"
+      tabIndex={0}
+      aria-label={open ? "Collapse contact cards" : "Expand contact cards"}
+      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(o => !o); } }}
+    >
       <div className="cw-wallet-back" />
       {CARDS.map(c => (
         <a
@@ -53,6 +62,7 @@ export default function ContactWallet() {
           href={c.href}
           target={c.href.startsWith("http") ? "_blank" : undefined}
           rel="noreferrer"
+          onClick={e => e.stopPropagation()}
           className={`cw-card ${c.cls}`}
         >
           <div className="cw-card-inner">

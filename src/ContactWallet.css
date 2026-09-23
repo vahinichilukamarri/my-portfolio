@@ -12,7 +12,7 @@
 
 .cw-wallet {
   position: relative;
-  width: 360px;
+  width: min(360px, 90vw);
   height: 410px;
   cursor: pointer;
   perspective: 1000px;
@@ -35,7 +35,12 @@
   font-weight: 500;
   letter-spacing: 0.05em;
   white-space: nowrap;
+  transition: opacity 0.3s ease;
 }
+@media (hover: none) {
+  .cw-wallet::after { content: "Tap to reveal"; }
+}
+.cw-wallet--open::after { content: "Tap to close"; opacity: 0.6; }
 
 @keyframes cwSlideIn {
   0% { transform: translateY(-100px); opacity: 0; }
@@ -45,7 +50,7 @@
 .cw-wallet-back {
   position: absolute;
   bottom: 0;
-  width: 360px;
+  width: 100%;
   height: 210px;
   background:
     radial-gradient(120% 100% at 50% 0%, rgba(167, 139, 255, 0.35), transparent 60%),
@@ -71,7 +76,7 @@
 
 .cw-card {
   position: absolute;
-  width: 320px;
+  width: calc(100% - 40px);
   height: 160px;
   left: 20px;
   border-radius: 18px;
@@ -190,16 +195,21 @@
   --fan-rot: 0deg;
 }
 
-/* hover choreography */
-.cw-wallet:hover .cw-card {
+/* hover + tap choreography — a tap on touch devices (no :hover) applies the
+   same fanned-out state via the --open class the component toggles. */
+.cw-wallet:hover .cw-card,
+.cw-wallet.cw-wallet--open .cw-card {
   transform: translateY(var(--fan-y)) rotate(var(--fan-rot));
 }
 
-.cw-wallet:hover .cw-card:hover {
+.cw-wallet:hover .cw-card:hover,
+.cw-wallet.cw-wallet--open .cw-card:hover {
   transform: translateY(calc(var(--fan-y) - 26px)) scale(1.06) rotate(0deg);
   z-index: 100 !important;
   transition-delay: 0s !important;
 }
 
-.cw-card:hover .cw-hidden-stars { display: none; }
-.cw-card:hover .cw-handle { display: block; }
+.cw-card:hover .cw-hidden-stars,
+.cw-wallet--open .cw-hidden-stars { display: none; }
+.cw-card:hover .cw-handle,
+.cw-wallet--open .cw-handle { display: block; }
