@@ -11,7 +11,7 @@ export const PROFILES = {
     intro: "Final-year CSE at KMIT building LLM agents that are verified, not trusted — MORPH writes integrations and ships its own test suites, TRACE recovered 42% more revenue than a rules baseline, and AgentShield AI is an accepted paper on multi-agent cloud security.",
     order: ["MORPH", "TRACE", "AgentShield AI", "EvalEngine", "AskBI", "LedgerGuard", "MoodAngels", "SafeStreet", "Microservice Health Orchestrator"],
     stack: ["AI & LLMs", "Languages", "Backend & Web", "Testing & Automation", "Data & Tools", "Core Concepts"],
-    highlight: ["LLM Agents", "LangGraph", "LangChain", "RAG", "LLM-as-a-Judge Evaluation", "AI-Assisted Test Generation", "Prompt Engineering", "Groq", "Ollama", "PyTorch", "Python", "FastAPI"],
+    highlight: ["LLM Agents", "MCP (Model Context Protocol)", "LangGraph", "LangChain", "RAG", "LLM-as-a-Judge Evaluation", "AI-Assisted Test Generation", "Prompt Engineering", "Groq", "Ollama", "PyTorch", "Python", "FastAPI"],
   },
   backend: {
     key: "backend",
@@ -38,7 +38,7 @@ export const PROFILES = {
     intro: "Final-year CSE at KMIT and co-author of AgentShield AI, an accepted paper on multi-agent LLMs for cloud infrastructure security — with agent systems that are verified, not trusted, and evaluations that report negative results as results.",
     order: ["AgentShield AI", "MORPH", "EvalEngine", "TRACE", "MoodAngels", "SafeStreet", "LedgerGuard", "AskBI", "Microservice Health Orchestrator"],
     stack: ["AI & LLMs", "Languages", "Testing & Automation", "Core Concepts", "Backend & Web", "Data & Tools"],
-    highlight: ["LLM Agents", "LangGraph", "RAG", "LLM-as-a-Judge Evaluation", "PyTorch", "TensorFlow", "Vision Transformers", "NLP", "scikit-learn", "Hugging Face", "Python"],
+    highlight: ["LLM Agents", "MCP (Model Context Protocol)", "LangGraph", "RAG", "LLM-as-a-Judge Evaluation", "PyTorch", "TensorFlow", "Vision Transformers", "NLP", "scikit-learn", "Hugging Face", "Python"],
   },
 };
 

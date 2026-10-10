@@ -10,6 +10,7 @@ const MORPH_PIPELINE = [
   { k: "Gate", t: "Guards G1–G5 · AST · ruff · mypy strict", d: "Gates never loosen. The model can only change its own file — edited base tests, suppression comments, or extra type escapes are rejected." },
   { k: "Sandbox", t: "Locked-down Docker execution", d: "Read-only root, internal network with only the mocks, no capabilities, 256 MB, 0.5 CPU, 64 processes, 60 s." },
   { k: "Repair", t: "Bounded LangGraph repair loop", d: "Structured feedback drives at most 3 repairs. Every run ends READY or HUMAN_REVIEW_REQUIRED — never silently." },
+  { k: "Expose", t: "Capabilities as MCP tools", d: "MORPH's capabilities are exposed over the Model Context Protocol, with a policy layer that gates every tool call before it runs." },
 ];
 
 const MORPH_STATS = [["≤3", "bounded repairs"], ["5", "guards that never loosen"], ["413", "hidden oracle checks"], ["60s", "sandbox time limit"]];

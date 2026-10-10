@@ -82,10 +82,11 @@ export const PROJECTS = [
     points: [
       "Discovers third-party API schemas, semantically maps them to a target, and writes the integration code",
       "Every generated module ships with a generated test suite, so AI-written code is verified rather than trusted",
+      "Exposes its capabilities as MCP (Model Context Protocol) tools, with a policy layer that gates every tool call",
       "The model only proposes — deterministic code validates, gates, and executes; failures feed a bounded LangGraph repair loop that ends READY or HUMAN_REVIEW_REQUIRED",
       "Runs on free infrastructure: Groq-hosted models with automatic fallback to local Ollama, state persisted in PostgreSQL",
     ],
-    stack: ["Python", "FastAPI", "LangGraph", "PostgreSQL", "pgvector", "Docker", "Groq", "Ollama"],
+    stack: ["Python", "FastAPI", "LangGraph", "MCP", "PostgreSQL", "pgvector", "Docker", "Groq", "Ollama"],
     gh: "https://github.com/vahinichilukamarri/MORPH-Autonomous-AI-Integration-Engineer",
   },
   {
@@ -169,7 +170,7 @@ export const PROJECTS = [
 
 export const STACK = [
   { cat: "Languages", accent: "lime", items: ["Python", "Java", "JavaScript", "TypeScript", "SQL", "C / C++", "HTML / CSS"] },
-  { cat: "AI & LLMs", accent: "amber", items: ["LLM Agents", "LangGraph", "LangChain", "AI-Assisted Test Generation", "LLM-as-a-Judge Evaluation", "RAG", "Prompt Engineering", "Vision Transformers", "Groq", "Ollama", "PyTorch", "TensorFlow", "Keras", "Hugging Face", "scikit-learn", "NLP", "Fine-tuning"] },
+  { cat: "AI & LLMs", accent: "amber", items: ["LLM Agents", "MCP (Model Context Protocol)", "LangGraph", "LangChain", "AI-Assisted Test Generation", "LLM-as-a-Judge Evaluation", "RAG", "Prompt Engineering", "Vision Transformers", "Groq", "Ollama", "PyTorch", "TensorFlow", "Keras", "Hugging Face", "scikit-learn", "NLP", "Fine-tuning"] },
   { cat: "Testing & Automation", accent: "emerald", items: ["JUnit", "jqwik", "Testcontainers", "Property-Based Testing", "API & Integration Tests", "Fault Injection", "Chaos Engineering", "CI/CD"] },
   { cat: "Backend & Web", accent: "cyan", items: ["FastAPI", "Spring Boot", "Spring Data JPA", "Node.js", "Express.js", "React", "React Router", "React Native", "REST APIs", "Kafka", "MERN Stack", "Streamlit"] },
   { cat: "Data & Tools", accent: "rose", items: ["PostgreSQL", "MySQL", "MongoDB", "SQLite", "Docker", "OpenTelemetry", "Flyway", "Git / GitHub", "Jira", "Jupyter", "Pandas", "NumPy"] },
