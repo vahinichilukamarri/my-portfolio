@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useScroll, useSpring, useTransform } from "motion/react";
 import { Counter, Reveal } from "./motion";
 import { EASE } from "./smooth";
-import { ACHIEVEMENTS, CERTS, LINKEDIN_POSTS, PUBLICATION } from "./data";
+import { ACHIEVEMENTS, CERTS, PUBLICATION } from "./data";
+import { LINKEDIN_POSTS } from "./posts";
 import offerImg from "./assets/offer_img.jpeg";
 
 const STATS = [

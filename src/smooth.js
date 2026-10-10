@@ -16,6 +16,11 @@ export function scrollToId(id) {
   else el.scrollIntoView({ behavior: "smooth" });
 }
 
+export function scrollToY(y, duration = 1.4) {
+  if (lenis) lenis.scrollTo(y, { duration });
+  else window.scrollTo({ top: y, behavior: "smooth" });
+}
+
 export function useSmoothScroll() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;

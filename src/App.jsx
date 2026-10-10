@@ -8,9 +8,13 @@ import NeuralField from "./NeuralField";
 import CommandPalette from "./CommandPalette";
 import CaseStudies from "./CaseStudies";
 import Recognition from "./Recognition";
+import AskAgent from "./AskAgent";
+import Tour from "./Tour";
+import { PROFILE, PROFILES, isHighlighted, orderProjects, orderStack, tailoredUrl } from "./profiles";
 import { BlurText, Counter, FillButton, LineMask, Magnetic, Reveal, ScrubText } from "./motion";
 import { EASE, scrollToId, useSmoothScroll } from "./smooth";
-import { ACHIEVEMENTS, CERTS, EDUCATION, EXPERIENCE, HIGHLIGHTS, LINKEDIN_POSTS, LINKS, NAV, PROJECTS, PUBLICATION, STACK, TICKER } from "./data";
+import { ACHIEVEMENTS, CERTS, EDUCATION, EXPERIENCE, HIGHLIGHTS, LINKS, NAV, PROJECTS, PUBLICATION, STACK, TICKER } from "./data";
+import { LINKEDIN_POSTS } from "./posts";
 
 const accent = a => `var(--${a})`;
 
@@ -430,7 +434,16 @@ function Ticker() {
   );
 }
 
-const ROLES = ["Software Engineer", "AI Engineer", "LLM Agents & Evals", "Research Co-author"];
+const ROLES = PROFILE?.roles ?? ["Software Engineer", "AI Engineer", "LLM Agents & Evals", "Research Co-author"];
+
+/* Italicises the "verified, not trusted" phrase wherever an intro uses it. */
+function IntroLine({ text }) {
+  const [a, b] = text.split("verified, not trusted");
+  if (b === undefined) return text;
+  return <>{a}<em className="font-serif text-[1.15em] text-[var(--ink)] italic">verified, not trusted</em>{b}</>;
+}
+
+const startTour = () => window.dispatchEvent(new Event("tour:start"));
 
 function Hero({ ready }) {
   const fade = d => ({ initial: { opacity: 0, y: 16 }, animate: ready ? { opacity: 1, y: 0 } : {}, transition: { duration: 0.9, delay: d, ease: EASE } });
@@ -444,6 +457,13 @@ function Hero({ ready }) {
             <span className="pulse-dot h-2 w-2 rounded-full bg-[var(--emerald)]" /> Open to SWE & AI internships
           </span>
         </motion.div>
+
+        {PROFILE && (
+          <motion.div {...fade(0.2)} className="mt-6 flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-[0.14em]">
+            <span className="rounded-full bg-[var(--accent)] px-3 py-1 text-[var(--bg)]">Tailored view · {PROFILE.label}</span>
+            <a href="/" className="text-[var(--muted)] underline-offset-4 transition-colors hover:text-[var(--ink)] hover:underline">See the full portfolio</a>
+          </motion.div>
+        )}
 
         <h1 className="font-display mt-10 text-[clamp(3.4rem,13.2vw,14rem)] leading-[0.86] font-medium tracking-[-0.06em] sm:mt-14">
           <span className="flex items-start gap-[0.12em]">
@@ -460,12 +480,17 @@ function Hero({ ready }) {
         <div className="mt-10 grid gap-10 lg:mt-14 lg:grid-cols-[1.25fr_1fr] lg:items-end">
           <motion.div {...fade(0.9)}>
             <p className="max-w-xl text-lg leading-relaxed text-[var(--muted)] sm:text-xl">
-              Final-year CSE at KMIT building AI systems that are <em className="font-serif text-[1.15em] text-[var(--ink)] italic">verified, not trusted</em> —
-              agents that ship their own test suites, payment agents fenced by deterministic policy, and ledgers proven with property-based tests.
+              <IntroLine text={PROFILE?.intro ?? "Final-year CSE at KMIT building AI systems that are verified, not trusted — agents that ship their own test suites, payment agents fenced by deterministic policy, and ledgers proven with property-based tests."} />
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Magnetic><FillButton onClick={() => scrollToId("work")}>See the work <span aria-hidden="true">↓</span></FillButton></Magnetic>
               <Magnetic><FillButton variant="ghost" onClick={() => scrollToId("contact")}>Get in touch</FillButton></Magnetic>
+              <button onClick={startTour} className="group ml-1 inline-flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] transition-colors hover:text-[var(--ink)]">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-hi)] transition-colors group-hover:border-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-[var(--bg)]">
+                  <svg viewBox="0 0 24 24" className="h-3 w-3 translate-x-[1px]" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                </span>
+                60-sec tour
+              </button>
             </div>
             <div className="mt-6"><Ticker /></div>
           </motion.div>
@@ -495,7 +520,7 @@ function HeroFrame() {
   const y = useTransform(scrollYProgress, [0, 1], [60, 0]);
 
   return (
-    <div ref={ref} className="wrap mt-16 sm:mt-24" style={{ perspective: 1400 }}>
+    <div ref={ref} id="hero-frame" className="wrap mt-16 sm:mt-24" style={{ perspective: 1400 }}>
       <motion.div
         style={{ scale, rotateX, borderRadius: radius, y, transformOrigin: "50% 100%" }}
         className="aurora relative flex min-h-[78vh] flex-col justify-between overflow-hidden border border-[var(--border-hi)] p-5 sm:p-8 lg:p-10"
@@ -771,12 +796,12 @@ function FlagshipCard({ p, i, n, progress, desktop }) {
 }
 
 function FlagshipStack() {
-  const flagships = PROJECTS.filter(p => p.featured);
+  const flagships = orderProjects(PROJECTS.filter(p => p.featured));
   const ref = useRef(null);
   const desktop = useIsDesktop();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   return (
-    <div ref={ref} className="relative mt-10">
+    <div ref={ref} id="flagships" className="relative mt-10">
       {flagships.map((p, i) => <FlagshipCard key={p.no} p={p} i={i} n={flagships.length} progress={scrollYProgress} desktop={desktop} />)}
     </div>
   );
@@ -878,7 +903,7 @@ function ProjectIndex() {
         <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">({String(PROJECTS.length).padStart(2, "0")}) builds · tap to expand</span>
       </div>
       <ul className="mt-8 border-t border-[var(--border)]">
-        {PROJECTS.map(p => (
+        {orderProjects(PROJECTS).map(p => (
           <IndexRow key={p.no} p={p} open={open === p.no} onToggle={() => setOpen(o => (o === p.no ? null : p.no))} onHover={v => setHover(open === p.no ? null : v)} />
         ))}
       </ul>
@@ -916,7 +941,7 @@ function LiveShowcase() {
   const host = p.live.replace(/^https?:\/\//, "");
 
   return (
-    <div ref={ref} className="mt-32">
+    <div ref={ref} id="live-trace" className="mt-32">
       <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end">
         <div>
           <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">
@@ -1014,7 +1039,7 @@ function Stack() {
       <div className="wrap">
         <SectionHead num="05" label="Stack" aside="Tools I reach for" a="What runs" b="underneath" />
         <div className="mt-16 border-t border-[var(--border)]">
-          {STACK.map((s, i) => (
+          {orderStack(STACK).map((s, i) => (
             <Reveal key={s.cat} delay={i * 0.04} className="grid gap-5 border-b border-[var(--border)] py-8 lg:grid-cols-[300px_1fr]">
               <div className="flex items-baseline gap-4">
                 <span className="font-mono text-xs" style={{ color: accent(s.accent) }}>{String(i + 1).padStart(2, "0")}</span>
@@ -1025,7 +1050,7 @@ function Stack() {
               </div>
               <div className="font-display flex flex-wrap gap-x-2 gap-y-1 text-[clamp(1.25rem,2.3vw,2rem)] leading-snug font-medium tracking-[-0.035em]" style={{ "--accent-c": accent(s.accent) }}>
                 {s.items.map((it, j) => (
-                  <span key={it} className="text-[var(--muted)] transition-colors duration-300 hover:text-[var(--accent-c)]">
+                  <span key={it} className={`transition-colors duration-300 hover:text-[var(--accent-c)] ${isHighlighted(it) ? "text-[var(--ink)] underline decoration-[var(--accent)] decoration-2 underline-offset-[0.18em]" : "text-[var(--muted)]"}`}>
                     {it}{j < s.items.length - 1 && <span className="text-[var(--muted-2)]">,</span>}
                   </span>
                 ))}
@@ -1314,6 +1339,9 @@ function usePaletteItems() {
       ...NAV.map(n => ({ group: "Jump to", label: n.label, hint: n.num, icon: "§", action: () => scrollToId(n.id) })),
       ...PROJECTS.filter(p => p.gh).map(p => ({ group: "Projects", label: `${p.title} — source`, hint: "github", icon: "{}", keywords: p.stack.join(" "), action: () => open(p.gh) })),
       ...PROJECTS.filter(p => p.live).map(p => ({ group: "Projects", label: `${p.title} — live app`, hint: "vercel", icon: "▶", action: () => open(p.live) })),
+      { group: "Explore", label: "Ask my portfolio (AI)", hint: "cited answers", icon: "✦", keywords: "chat question assistant agent", action: () => window.dispatchEvent(new CustomEvent("ask:open")) },
+      { group: "Explore", label: "Start the 60-second tour", hint: "auto-play", icon: "▶", keywords: "walkthrough guide recruiter", action: startTour },
+      ...Object.values(PROFILES).map(pr => ({ group: "Tailored links", label: `Copy link — ${pr.label}`, hint: `?for=${pr.key}`, icon: "⧉", keywords: "share recruiter role tailored", action: () => navigator.clipboard?.writeText(tailoredUrl(pr.key)) })),
       { group: "Links", label: "Resume", hint: "pdf", icon: "↗", action: () => open(LINKS.resume) },
       { group: "Links", label: "LinkedIn", hint: "profile", icon: "in", action: () => open(LINKS.linkedin) },
       { group: "Links", label: "GitHub", hint: "profile", icon: "gh", action: () => open(LINKS.github) },
@@ -1331,6 +1359,7 @@ function shouldPlayIntro() {
 export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [intro, setIntro] = useState(shouldPlayIntro);
+  const [touring, setTouring] = useState(false);
   const paletteItems = usePaletteItems();
   useSmoothScroll();
 
@@ -1347,7 +1376,14 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  useEffect(() => {
+    const onTour = () => { setPaletteOpen(false); setTouring(true); };
+    window.addEventListener("tour:start", onTour);
+    return () => window.removeEventListener("tour:start", onTour);
+  }, []);
+
   const openPalette = () => setPaletteOpen(true);
+  const endTour = useCallback(() => setTouring(false), []);
 
   return (
     <div className="relative min-h-screen">
@@ -1371,6 +1407,8 @@ export default function App() {
       </main>
       <Footer />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} items={paletteItems} />
+      <AnimatePresence>{touring && <Tour key="tour" onClose={endTour} />}</AnimatePresence>
+      {!intro && <AskAgent hidden={touring} />}
     </div>
   );
 }
