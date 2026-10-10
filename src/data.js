@@ -78,7 +78,7 @@ export const EDUCATION = [
 export const PROJECTS = [
   {
     no: "01", title: "MORPH", sub: "Autonomous AI integration engineer · agent-written code, verified not trusted",
-    accent: "violet", featured: true, isNew: true, year: "2026",
+    accent: "lime", featured: true, isNew: true, year: "2026",
     metric: { n: "≤3", l: "bounded repairs, then a human" },
     desc: "Given two independently built systems' API contracts, MORPH discovers their schemas, proposes how the data maps, writes the integration — and pairs every generated module with a generated test suite, run inside a locked-down sandbox.",
     points: [
@@ -129,7 +129,7 @@ export const PROJECTS = [
   },
   {
     no: "05", title: "Microservice Health Orchestrator", sub: "Observability platform · root-cause & blast-radius analysis",
-    accent: "violet", year: "2026",
+    accent: "cyan", year: "2026",
     desc: "The applied output of the Salesforce mentorship — a self-hosted platform that watches a microservice fleet, finds the root cause of an incident, and estimates blast radius before it spreads.",
     points: ["Dependency graph auto-discovered from OTel spans; cycles resolved with Tarjan's SCC", "Root-cause via topological root-finding + time-correlation ranking", "Cycle-safe BFS/DFS blast-radius detection feeding a live Cytoscape.js dashboard"],
     stack: ["React", "FastAPI", "OpenTelemetry", "SQLite"],
@@ -137,7 +137,7 @@ export const PROJECTS = [
   },
   {
     no: "06", title: "EvalEngine", sub: "LLM evaluation & improvement engine",
-    accent: "cyan", year: "2025",
+    accent: "lime", year: "2025",
     desc: "A judge for other models. An LLM-as-a-judge pipeline that generates, scores, and ranks multiple AI responses through structured multi-metric analysis, mimicking RLHF-style iterative refinement.",
     points: ["LLM-as-judge scoring across relevance, correctness, completeness, and bias", "Feedback-driven refinement loop with an interactive Streamlit dashboard", "Currently extending with hallucination detection and RAG for factual grounding"],
     stack: ["Python", "Streamlit", "LLM APIs", "Pandas", "Scikit-learn"],
@@ -153,7 +153,7 @@ export const PROJECTS = [
   },
   {
     no: "08", title: "MoodAngels", sub: "AI-based psychiatric diagnostic support",
-    accent: "violet", year: "2025",
+    accent: "rose", year: "2025",
     desc: "A multi-agent NLP system that analyzes behavioral and textual patient data to assist diagnostic reasoning, evaluated on a synthetic dataset of 500+ case records.",
     points: ["Multi-agent architecture splitting behavioral vs. textual signal analysis", "NLP pipeline for pattern extraction across patient case records", "Evaluated on 500+ synthetic diagnostic cases for reasoning consistency"],
     stack: ["Python", "NLP", "MERN Stack"],
@@ -170,12 +170,12 @@ export const PROJECTS = [
 ];
 
 export const STACK = [
-  { cat: "Languages", accent: "violet", items: ["Python", "Java", "JavaScript", "TypeScript", "SQL", "C / C++", "HTML / CSS"] },
+  { cat: "Languages", accent: "lime", items: ["Python", "Java", "JavaScript", "TypeScript", "SQL", "C / C++", "HTML / CSS"] },
   { cat: "AI & LLMs", accent: "amber", items: ["LLM Agents", "LangGraph", "LangChain", "AI-Assisted Test Generation", "LLM-as-a-Judge Evaluation", "RAG", "Prompt Engineering", "Vision Transformers", "Groq", "Ollama", "PyTorch", "TensorFlow", "Keras", "Hugging Face", "scikit-learn", "NLP", "Fine-tuning"] },
   { cat: "Testing & Automation", accent: "emerald", items: ["JUnit", "jqwik", "Testcontainers", "Property-Based Testing", "API & Integration Tests", "Fault Injection", "Chaos Engineering", "CI/CD"] },
   { cat: "Backend & Web", accent: "cyan", items: ["FastAPI", "Spring Boot", "Spring Data JPA", "Node.js", "Express.js", "React", "React Router", "React Native", "REST APIs", "Kafka", "MERN Stack", "Streamlit"] },
   { cat: "Data & Tools", accent: "rose", items: ["PostgreSQL", "MySQL", "MongoDB", "SQLite", "Docker", "OpenTelemetry", "Flyway", "Git / GitHub", "Jira", "Jupyter", "Pandas", "NumPy"] },
-  { cat: "Core Concepts", accent: "violet", items: ["Object-Oriented Programming", "Data Structures & Algorithms", "Distributed Systems & Observability", "Idempotency", "SDLC"] },
+  { cat: "Core Concepts", accent: "lime", items: ["Object-Oriented Programming", "Data Structures & Algorithms", "Distributed Systems & Observability", "Idempotency", "SDLC"] },
 ];
 
 // Real LinkedIn posts — tags pulled from each post's own hashtags, links go straight to the post.

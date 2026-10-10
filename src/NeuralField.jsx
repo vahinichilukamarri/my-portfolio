@@ -53,7 +53,7 @@ export default function NeuralField({ className = "" }) {
           if (d > LINK_DIST) continue;
           const glow = Math.max(a.glow, b.glow);
           const alpha = (1 - d / LINK_DIST) * (0.22 + glow * 0.55);
-          ctx.strokeStyle = glow > 0.05 ? `rgba(34, 211, 238, ${alpha})` : `rgba(147, 132, 248, ${alpha})`;
+          ctx.strokeStyle = glow > 0.05 ? `rgba(212, 255, 63, ${alpha})` : `rgba(240, 237, 230, ${alpha * 0.55})`;
           ctx.lineWidth = 0.7 + glow * 0.6;
           ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
         }
@@ -61,11 +61,11 @@ export default function NeuralField({ className = "" }) {
 
       for (const n of nodes) {
         if (n.glow > 0.05) {
-          ctx.strokeStyle = `rgba(34, 211, 238, ${n.glow * 0.35})`;
+          ctx.strokeStyle = `rgba(212, 255, 63, ${n.glow * 0.35})`;
           ctx.lineWidth = 0.6;
           ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
         }
-        ctx.fillStyle = n.glow > 0.05 ? `rgba(165, 243, 252, ${0.6 + n.glow * 0.4})` : "rgba(196, 190, 255, 0.55)";
+        ctx.fillStyle = n.glow > 0.05 ? `rgba(226, 255, 122, ${0.6 + n.glow * 0.4})` : "rgba(240, 237, 230, 0.45)";
         ctx.beginPath(); ctx.arc(n.x, n.y, n.r + n.glow * 1.6, 0, Math.PI * 2); ctx.fill();
       }
 

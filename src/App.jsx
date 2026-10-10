@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, animate, motion, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from "motion/react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, animate, motion, useInView, useIsPresent, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from "motion/react";
 import "./App.css";
 import ContactWallet from "./Contactwallet";
 import Cursor from "./Cursor";
@@ -170,6 +170,14 @@ function Arrow({ className = "" }) {
   );
 }
 
+function LivePill({ className = "" }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border border-[var(--emerald)]/40 bg-[var(--emerald)]/10 px-2 py-0.5 font-mono text-[9px] tracking-[0.14em] text-[var(--emerald)] uppercase ${className}`}>
+      <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-[var(--emerald)]" />Live
+    </span>
+  );
+}
+
 function ScrollProgress() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
@@ -177,31 +185,96 @@ function ScrollProgress() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   INTRO — a short counter + curtain, once per session
+   INTRO — word flipper + counter, then a staggered column shutter.
+   Once per session; any key or click skips it.
    ══════════════════════════════════════════════════════════ */
+const IntroOrb = lazy(() => import("./IntroOrb"));
+const INTRO_WORDS = ["agents", "evals", "ledgers", "pipelines"];
+const INTRO_COLS = 6;
+const SHUTTER = [0.76, 0, 0.24, 1];
+
 function Intro({ onDone }) {
   const [n, setN] = useState(0);
+  const [w, setW] = useState(0);
+  const final = w >= INTRO_WORDS.length;
+  const present = useIsPresent();
+
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const c = animate(0, 100, { duration: 1.5, ease: [0.65, 0, 0.35, 1], onUpdate: v => setN(Math.round(v)), onComplete: () => setTimeout(onDone, 200) });
-    return () => { c.stop(); document.body.style.overflow = prev; };
+    const c = animate(0, 100, { duration: 2.2, ease: [0.65, 0, 0.35, 1], onUpdate: v => setN(Math.round(v)) });
+    const iv = setInterval(() => setW(i => Math.min(i + 1, INTRO_WORDS.length)), 360);
+    const t = setTimeout(onDone, 2750);
+    const skip = () => onDone();
+    window.addEventListener("keydown", skip);
+    window.addEventListener("pointerdown", skip);
+    return () => {
+      c.stop(); clearInterval(iv); clearTimeout(t);
+      window.removeEventListener("keydown", skip);
+      window.removeEventListener("pointerdown", skip);
+      document.body.style.overflow = prev;
+    };
   }, [onDone]);
+
   return (
-    <motion.div
-      exit={{ clipPath: "inset(0 0 100% 0)" }}
-      initial={{ clipPath: "inset(0 0 0% 0)" }}
-      transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
-      className="fixed inset-0 z-[100] flex flex-col justify-between bg-[var(--ink)] p-[var(--gutter)] text-[var(--bg)]"
-    >
-      <div className="flex justify-between font-mono text-[11px] uppercase tracking-[0.18em]">
-        <span>Venkata Vahini Chilukamarri</span>
-        <span>Portfolio ©2026</span>
+    <motion.div className="fixed inset-0 z-[100]" exit={{ opacity: 1 }} transition={{ duration: 1.5 }} aria-hidden="true">
+      <div className="absolute inset-0 flex">
+        {Array.from({ length: INTRO_COLS }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="relative h-full flex-1 bg-[#121211] shadow-[inset_-1px_0_0_rgba(255,255,255,0.035)]"
+            exit={{ y: "-104%" }}
+            transition={{ duration: 1, delay: 0.12 + i * 0.07, ease: SHUTTER }}
+          >
+            <motion.span initial={{ opacity: 0 }} exit={{ opacity: 1 }} transition={{ duration: 0.2 }} className="absolute inset-x-0 bottom-0 h-[3px] bg-[var(--accent)]" />
+          </motion.div>
+        ))}
       </div>
-      <div className="flex items-end justify-between gap-6">
-        <div className="max-w-xs font-serif text-2xl italic leading-tight sm:text-3xl">Software that’s verified, not trusted.</div>
-        <div className="font-display text-[clamp(5rem,22vw,18rem)] leading-[0.8] font-medium tracking-[-0.06em] tabular-nums">{n}<span className="text-[0.35em] align-top">%</span></div>
-      </div>
+
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.2 }} className="absolute inset-0">
+        <Suspense fallback={null}><IntroOrb leaving={!present} /></Suspense>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0, y: -24, filter: "blur(10px)" }}
+        transition={{ duration: 0.45, ease: EASE }}
+        className="relative flex h-full flex-col justify-between p-[var(--gutter)]"
+      >
+        <div className="flex justify-between font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+          <span>Venkata Vahini Chilukamarri</span>
+          <span className="hidden sm:inline">Portfolio — 2026</span>
+        </div>
+
+        <div className="flex flex-col items-center">
+          <div className="font-display flex flex-col items-center text-center text-[clamp(2.4rem,8vw,7.5rem)] leading-none font-medium tracking-[-0.05em]">
+            <span className="text-[var(--muted-2)]">Building</span>
+            <span className="relative flex h-[1.15em] w-full justify-center overflow-hidden">
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.span
+                  key={final ? "final" : w}
+                  initial={{ y: "105%" }}
+                  animate={{ y: "0%" }}
+                  exit={{ y: "-105%" }}
+                  transition={{ duration: 0.38, ease: SHUTTER }}
+                  className={`block whitespace-nowrap ${final ? "font-serif font-normal tracking-[-0.02em] text-[var(--accent)] italic" : "text-[var(--ink)]"}`}
+                >
+                  {final ? "verified systems." : INTRO_WORDS[w]}
+                </motion.span>
+              </AnimatePresence>
+            </span>
+          </div>
+          <div className="mt-10 h-px w-[min(26rem,70vw)] overflow-hidden bg-white/10">
+            <div className="h-full origin-left bg-[var(--accent)]" style={{ transform: `scaleX(${n / 100})` }} />
+          </div>
+        </div>
+
+        <div className="flex items-end justify-between font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+          <span>Hyderabad, IN<br /><span className="text-[var(--muted-2)]">SWE · AI Engineer</span></span>
+          <span className="font-display text-[clamp(3rem,9vw,7rem)] leading-[0.8] font-medium tracking-[-0.06em] text-[var(--ink)] tabular-nums normal-case">{String(n).padStart(3, "0")}</span>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
@@ -564,7 +637,7 @@ function About() {
    EXPERIENCE & RESEARCH
    ══════════════════════════════════════════════════════════ */
 const TIMELINE = [
-  { when: EXPERIENCE.when, tag: "Experience", color: "violet", title: EXPERIENCE.org, role: EXPERIENCE.role, where: EXPERIENCE.where, points: EXPERIENCE.points, stack: EXPERIENCE.stack, href: EXPERIENCE.gh, cta: "View source" },
+  { when: EXPERIENCE.when, tag: "Experience", color: "lime", title: EXPERIENCE.org, role: EXPERIENCE.role, where: EXPERIENCE.where, points: EXPERIENCE.points, stack: EXPERIENCE.stack, href: EXPERIENCE.gh, cta: "View source" },
   { when: "To appear Jan 2027", tag: "Publication", color: "amber", title: PUBLICATION.title, role: `${PUBLICATION.kind} — multi-agent LLMs for cloud infrastructure security`, where: PUBLICATION.status, points: PUBLICATION.points, stack: PUBLICATION.stack, href: PUBLICATION.gh, cta: "Read paper" },
   { when: "2026", tag: "Award", color: "rose", title: "Centific Hackathon 2.0 — Winner", role: "Awarded an AI Engineer internship offer", where: "Hackathon", points: ["Built an AI recruiter avatar platform in 2 weeks, winning the hackathon and an AI Engineer internship offer."], stack: [] },
   { when: "June 2026 – Present", tag: "Community", color: "emerald", title: "Rewriting the Code", role: "Contributor — nonprofit supporting women in tech", where: "Remote", points: [], stack: [] },
@@ -661,6 +734,7 @@ function FlagshipCard({ p, i, n, progress, desktop }) {
               <span className="h-px w-8 bg-[var(--border-hi)]" />
               Flagship · {p.year}
               {p.isNew && <span className="rounded-full px-2 py-0.5 text-[9px] text-[var(--bg)]" style={{ background: c }}>New</span>}
+              {p.live && <LivePill />}
             </div>
             <h3 className="font-display mt-6 text-[clamp(2.8rem,6vw,5.6rem)] leading-[0.9] font-medium tracking-[-0.055em]">{p.title}</h3>
             <p className="mt-3 font-serif text-xl italic" style={{ color: c }}>{p.sub}</p>
@@ -725,6 +799,7 @@ function IndexRow({ p, open, onToggle, onHover }) {
           <span className="font-display flex items-center gap-3 text-[clamp(1.6rem,4.2vw,3.6rem)] leading-none font-medium tracking-[-0.045em] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-x-3">
             <span className="truncate">{p.title}</span>
             {p.isNew && <span className="shrink-0 rounded-full px-2 py-0.5 font-mono text-[9px] tracking-[0.14em] text-[var(--bg)] uppercase" style={{ background: c }}>New</span>}
+            {p.live && <LivePill className="shrink-0" />}
           </span>
           <span className="mt-2 block truncate text-sm text-[var(--muted)] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-x-3">{p.sub}</span>
         </span>
@@ -811,12 +886,118 @@ function ProjectIndex() {
   );
 }
 
+/* The deployed TRACE app, embedded in a browser frame. The iframe renders
+   at a fixed desktop size and is scaled to fit, loads only when near the
+   viewport, and stays non-interactive until clicked so page scroll isn't hijacked. */
+const LIVE_W = 1440, LIVE_H = 900;
+
+function LiveShowcase() {
+  const p = PROJECTS.find(x => x.live);
+  const ref = useRef(null);
+  const screenRef = useRef(null);
+  const near = useInView(ref, { once: true, margin: "400px 0px" });
+  const [scale, setScale] = useState(0.5);
+  const [loaded, setLoaded] = useState(false);
+  const [interactive, setInteractive] = useState(false);
+  const [nonce, setNonce] = useState(0);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "start 0.15"] });
+  const rotateX = useTransform(scrollYProgress, [0, 1], [20, 0]);
+  const sc = useTransform(scrollYProgress, [0, 1], [0.9, 1]);
+
+  useEffect(() => {
+    const el = screenRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setScale(e.contentRect.width / LIVE_W));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const host = p.live.replace(/^https?:\/\//, "");
+
+  return (
+    <div ref={ref} className="mt-32">
+      <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+        <div>
+          <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">
+            <span className="pulse-dot h-2 w-2 rounded-full bg-[var(--emerald)]" /> Live in production
+          </div>
+          <h3 className="font-display mt-5 text-[clamp(2.2rem,5vw,4.4rem)] leading-[0.95] font-medium tracking-[-0.05em]">
+            {p.title}, running <em className="font-serif font-normal text-[var(--accent)] italic">right now.</em>
+          </h3>
+        </div>
+        <div>
+          <p className="max-w-md text-[var(--muted)]">Not a screenshot — this is the deployed app, embedded live. Click the screen to use it here, or open it full-size.</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <FillButton href={p.live} data-cursor="Visit">Open live app <Arrow /></FillButton>
+            <FillButton variant="ghost" href={p.gh}>Source <Arrow /></FillButton>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-12" style={{ perspective: 1600 }}>
+        <motion.div style={{ rotateX, scale: sc, transformOrigin: "50% 100%" }} className="overflow-hidden rounded-[1.25rem] border border-[var(--border-hi)] bg-[#141413] shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)]">
+          <div className="flex items-center gap-3 border-b border-[var(--border)] px-4 py-3">
+            <div className="flex gap-1.5">
+              <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
+              <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+              <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
+            </div>
+            <div className="mx-auto flex min-w-0 max-w-md flex-1 items-center justify-center gap-2 rounded-full bg-white/[0.05] px-4 py-1.5 font-mono text-[11px] text-[var(--muted)]">
+              <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 1 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z" /></svg>
+              <span className="truncate">{host}</span>
+            </div>
+            <button onClick={() => { setLoaded(false); setNonce(k => k + 1); }} aria-label="Reload live preview" className="hidden h-7 w-7 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:bg-white/5 hover:text-[var(--ink)] sm:flex">↻</button>
+            <a href={p.live} target="_blank" rel="noreferrer" aria-label="Open in new tab" className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:bg-white/5 hover:text-[var(--ink)]"><Arrow /></a>
+          </div>
+
+          <div ref={screenRef} className="relative w-full overflow-hidden bg-[#0e0e0d]" style={{ aspectRatio: `${LIVE_W} / ${LIVE_H}` }} onMouseLeave={() => setInteractive(false)}>
+            {near && (
+              <iframe
+                key={nonce}
+                src={p.live}
+                title={`${p.title} — live application`}
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                onLoad={() => setLoaded(true)}
+                className={`absolute top-0 left-0 origin-top-left border-0 transition-opacity duration-700 ${loaded ? "opacity-100" : "opacity-0"}`}
+                style={{ width: LIVE_W, height: LIVE_H, transform: `scale(${scale})`, pointerEvents: interactive ? "auto" : "none" }}
+              />
+            )}
+            {!loaded && (
+              <div className="absolute inset-0 flex items-center justify-center font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--muted-2)]">
+                <span className="animate-pulse">Connecting to {host}…</span>
+              </div>
+            )}
+            <AnimatePresence>
+              {!interactive && loaded && (
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  onClick={() => setInteractive(true)}
+                  data-cursor="Try it"
+                  className="group absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent pb-6"
+                  aria-label="Interact with the live preview"
+                >
+                  <span className="rounded-full border border-white/20 bg-black/50 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-white backdrop-blur transition-transform duration-500 group-hover:-translate-y-1">Click to interact</span>
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
 function Work() {
   return (
     <section id="work" className="relative py-28 sm:py-40">
       <div className="wrap">
         <SectionHead num="03" label="Work" aside={`${PROJECTS.length} builds, open for review`} a="Selected" b="work," c="open for review" />
         <FlagshipStack />
+        <LiveShowcase />
         <ProjectIndex />
       </div>
     </section>

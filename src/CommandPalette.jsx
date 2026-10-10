@@ -39,9 +39,9 @@ export default function CommandPalette({ open, onClose, items }) {
 
   return createPortal(
     <div className="animate-backdrop-in fixed inset-0 z-[95] flex items-start justify-center bg-black/65 px-4 pt-[14vh] backdrop-blur-sm" onClick={close}>
-      <div className="animate-pop-in w-full max-w-xl overflow-hidden rounded-2xl border border-[var(--border-hi)] bg-[#0d0e14]/95 shadow-2xl shadow-black/70" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Command palette">
+      <div className="animate-pop-in w-full max-w-xl overflow-hidden rounded-2xl border border-[var(--border-hi)] bg-[#111113]/95 shadow-2xl shadow-black/70" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Command palette">
         <div className="flex items-center gap-3 border-b border-[var(--border)] px-5">
-          <span className="font-mono text-[var(--violet)]">⌘</span>
+          <span className="font-mono text-[var(--accent)]">⌘</span>
           <input
             ref={inputRef}
             value={query}
@@ -64,10 +64,10 @@ export default function CommandPalette({ open, onClose, items }) {
                   data-idx={i}
                   onMouseMove={() => setCursor(i)}
                   onClick={() => run(it)}
-                  className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${i === cursor ? "bg-[var(--violet)]/15 text-[var(--ink)]" : "text-[var(--muted)]"}`}
+                  className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${i === cursor ? "bg-[var(--accent)]/10 text-[var(--ink)]" : "text-[var(--muted)]"}`}
                 >
                   <span className="flex items-center gap-3">
-                    <span className={`flex h-6 w-6 items-center justify-center rounded-md border font-mono text-[10px] ${i === cursor ? "border-[var(--violet)]/50 text-[var(--violet)]" : "border-[var(--border)] text-[var(--muted-2)]"}`}>{it.icon}</span>
+                    <span className={`flex h-6 w-6 items-center justify-center rounded-md border font-mono text-[10px] ${i === cursor ? "border-[var(--accent)]/50 text-[var(--accent)]" : "border-[var(--border)] text-[var(--muted-2)]"}`}>{it.icon}</span>
                     {it.label}
                   </span>
                   {it.hint && <span className="font-mono text-[10px] text-[var(--muted-2)]">{it.hint}</span>}

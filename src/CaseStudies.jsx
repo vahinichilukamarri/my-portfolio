@@ -88,7 +88,7 @@ function Panel({ children, className = "" }) {
   return <div className={`rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 ${className}`}>{children}</div>;
 }
 
-function Label({ color = "var(--violet)", children }) {
+function Label({ color = "var(--lime)", children }) {
   return <div className="font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color }}>{children}</div>;
 }
 
@@ -227,7 +227,7 @@ function TraceActions() {
 function MorphFindings() {
   return (
     <Panel>
-      <Label color="var(--violet)">Honest findings</Label>
+      <Label color="var(--lime)">Honest findings</Label>
       <p className="mt-2 text-sm text-[var(--muted)]">Correctness is judged by a hand-written oracle the pipeline never sees.</p>
       <div className="mt-5 space-y-3">
         {MORPH_FINDINGS.map(([h, d]) => (
@@ -315,7 +315,7 @@ function LedgerPhases() {
 }
 
 const TABS = [
-  { id: "morph", name: "MORPH", sub: "Autonomous AI integration engineer", color: "var(--violet)", gh: "https://github.com/vahinichilukamarri/MORPH-Autonomous-AI-Integration-Engineer" },
+  { id: "morph", name: "MORPH", sub: "Autonomous AI integration engineer", color: "var(--lime)", gh: "https://github.com/vahinichilukamarri/MORPH-Autonomous-AI-Integration-Engineer" },
   { id: "trace", name: "TRACE", sub: "AI revenue-recovery agent", color: "var(--rose)", gh: "https://github.com/vahinichilukamarri/TRACE", live: "https://trace-xi-nine.vercel.app" },
   { id: "ledger", name: "LedgerGuard", sub: "Payment integrity platform", color: "var(--emerald)", gh: "https://github.com/vahinichilukamarri/LedgerGuard" },
 ];
@@ -360,9 +360,9 @@ export default function CaseStudies({ num, Head }) {
 
           {tab === "morph" && (
             <div className="grid gap-5 lg:grid-cols-[1.05fr_1fr]">
-              <Pipeline stages={MORPH_PIPELINE} color="var(--violet)" label="Discover → generate → verify → repair" tagline="The model proposes. Deterministic code decides." />
+              <Pipeline stages={MORPH_PIPELINE} color="var(--lime)" label="Discover → generate → verify → repair" tagline="The model proposes. Deterministic code decides." />
               <div className="grid content-start gap-5">
-                <StatGrid stats={MORPH_STATS} from="var(--violet)" to="var(--cyan)" />
+                <StatGrid stats={MORPH_STATS} from="var(--lime)" to="var(--cyan)" />
                 <MorphFindings />
               </div>
             </div>

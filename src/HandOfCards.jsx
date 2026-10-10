@@ -25,7 +25,7 @@ function useTier() {
 function PostHeader({ compact }) {
   return (
     <div className={`flex items-center gap-2 ${compact ? "px-3 pt-3 pb-2" : "px-5 pt-5 pb-3"}`}>
-      <div className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--violet)] to-[var(--indigo)] font-display font-bold text-white ${compact ? "h-8 w-8 text-[11px]" : "h-10 w-10 text-sm"}`}>VC</div>
+      <div className={`flex shrink-0 items-center justify-center rounded-full bg-[var(--ink)] font-serif italic text-[var(--bg)] ${compact ? "h-8 w-8 text-[11px]" : "h-10 w-10 text-sm"}`}>v</div>
       <div className="min-w-0 text-left leading-tight">
         <div className={`truncate font-semibold text-[var(--ink)] ${compact ? "text-xs" : "text-sm"}`}>Vahini Chilukamarri</div>
         <div className={`font-mono text-[var(--muted-2)] ${compact ? "text-[9px]" : "text-[11px]"}`}>AI/ML Engineer · LinkedIn</div>
@@ -55,13 +55,13 @@ function Lightbox({ posts, index, onClose, onNav, profileUrl }) {
 
   return createPortal(
     <div className="animate-backdrop-in fixed inset-0 z-[90] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md" onClick={onClose} role="dialog" aria-modal="true" aria-label="LinkedIn post preview">
-      <div key={index} className="animate-pop-in relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-[var(--border-hi)] bg-[#0d0e14] shadow-2xl shadow-black/60" onClick={e => e.stopPropagation()}>
+      <div key={index} className="animate-pop-in relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-[var(--border-hi)] bg-[#111113] shadow-2xl shadow-black/60" onClick={e => e.stopPropagation()}>
         <div className="flex items-center border-b border-[var(--border)]">
           <div className="flex-1"><PostHeader /></div>
           <span className="px-2 font-mono text-[11px] text-[var(--muted-2)]">{index + 1} / {posts.length}</span>
-          <button onClick={onClose} aria-label="Close preview" className="mr-4 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-colors hover:border-[var(--violet)]/50 hover:text-[var(--ink)]">✕</button>
+          <button onClick={onClose} aria-label="Close preview" className="mr-4 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-colors hover:border-[var(--accent)]/50 hover:text-[var(--ink)]">✕</button>
         </div>
-        <div className="flex flex-wrap gap-2 px-5 py-3 font-mono text-xs text-[var(--cyan)]">
+        <div className="flex flex-wrap gap-2 px-5 py-3 font-mono text-xs text-[var(--accent)]">
           {post.tags.map(t => <span key={t}>#{t}</span>)}
         </div>
         <div className="relative min-h-0 flex-1 bg-black">
@@ -142,12 +142,12 @@ export default function HandOfCards({ posts, profileUrl }) {
             onMouseEnter: () => hover(i),
             onFocus: () => hover(i),
             style: slotStyle,
-            className: "absolute block rounded-2xl outline-none transition-transform duration-[650ms] ease-[cubic-bezier(.22,1,.36,1)] focus-visible:ring-2 focus-visible:ring-[var(--cyan)]",
+            className: "absolute block rounded-2xl outline-none transition-transform duration-[650ms] ease-[cubic-bezier(.22,1,.36,1)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
           };
           const face = (
             <div
               style={cardStyle}
-              className={`flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-[#101119] transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${isActive ? "border-[var(--violet)]/60 shadow-[0_30px_80px_-20px_rgba(147,132,248,0.55)]" : "border-[var(--border-hi)] shadow-2xl shadow-black/60"}`}
+              className={`flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-[#111113] transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${isActive ? "border-[var(--accent)]/60 shadow-[0_30px_80px_-20px_rgba(147,132,248,0.55)]" : "border-[var(--border-hi)] shadow-2xl shadow-black/60"}`}
             >
               {c.seeMore ? (
                 <div className="relative flex h-full flex-col items-center justify-center gap-3 overflow-hidden text-center">
@@ -160,7 +160,7 @@ export default function HandOfCards({ posts, profileUrl }) {
               ) : (
                 <>
                   <PostHeader compact />
-                  <div className="flex flex-wrap gap-x-1.5 gap-y-0.5 px-3 pb-2 font-mono text-[9px] text-[var(--cyan)]">
+                  <div className="flex flex-wrap gap-x-1.5 gap-y-0.5 px-3 pb-2 font-mono text-[9px] text-[var(--accent)]">
                     {c.tags.map(tag => <span key={tag}>#{tag}</span>)}
                   </div>
                   <div className="relative flex-1 overflow-hidden bg-black">

@@ -18,13 +18,14 @@
   --ink: #f0ede6;
   --muted: #94918a;
   --muted-2: #5f5d58;
-  --accent: #b4a6ff;
-  --violet: #b4a6ff;
-  --indigo: #6d5ef0;
-  --cyan: #6fdcef;
-  --amber: #f2c36b;
-  --emerald: #5fd7a4;
-  --rose: #fb8a9a;
+  /* one signal colour (chartreuse) over warm neutrals; the rest are muted
+     project tints, never used for large fills */
+  --lime: #d4ff3f;
+  --accent: var(--lime);
+  --cyan: #8fc8ff;
+  --amber: #e9c98f;
+  --emerald: #7ee0b8;
+  --rose: #f2a0ae;
   --gutter: clamp(1rem, 3.2vw, 2.5rem);
 }
 
@@ -106,11 +107,11 @@ body {
   background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent-c, var(--accent)) 14%, transparent), transparent 62%);
 }
 
-/* hero frame backdrop: soft aurora */
+/* hero frame backdrop: graphite with a single soft signal glow + dot grid */
 .aurora {
   background:
-    radial-gradient(60% 80% at 15% 20%, color-mix(in srgb, var(--indigo) 45%, transparent), transparent 60%),
-    radial-gradient(50% 70% at 85% 30%, color-mix(in srgb, var(--cyan) 22%, transparent), transparent 60%),
-    radial-gradient(70% 60% at 60% 100%, color-mix(in srgb, var(--rose) 18%, transparent), transparent 60%),
-    #0d0d12;
+    radial-gradient(55% 70% at 78% 18%, color-mix(in srgb, var(--lime) 13%, transparent), transparent 62%),
+    radial-gradient(60% 60% at 10% 100%, rgba(240, 237, 230, 0.06), transparent 60%),
+    radial-gradient(circle at center, rgba(240, 237, 230, 0.07) 1px, transparent 1.2px) 0 0 / 22px 22px,
+    #0e0e0d;
 }
