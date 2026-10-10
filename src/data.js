@@ -194,12 +194,12 @@ export const CERTS = [
 export const ACHIEVEMENTS = [
   { t: "Winner, Centific Hackathon 2.0", d: "Awarded an AI Engineer internship offer for an AI recruiter avatar platform built in 2 weeks", star: true },
   { t: "Co-author, AgentShield AI", d: "Multi-agent LLMs for cloud infrastructure security — accepted, to appear Jan 2027", star: true },
-  { t: "DBMS Workshop Facilitator", d: "Led a peer technical workshop on database management systems at KMIT" },
-  { t: "PRAKALP Hackathon", d: "Bluetooth Talking Vehicle prototype, team build" },
-  { t: "GeeksforGeeks Hackathon", d: "End-to-end system design, working prototype" },
-  { t: "Contributor, Rewriting the Code", d: "Nonprofit supporting women in tech — remote, since June 2026" },
-  { t: "Graphic Designer Intern", d: "PR Team, Student Council, KMIT — 20+ assets, 2,000+ reach" },
-  { t: "NSS Volunteer", d: "Coordinated 5+ service drives, 40+ volunteer hours since Aug 2023" },
-  { t: "Top 3% Statewide, Intermediate", d: "97.0% in MPC, Narayana Junior College" },
+  { t: "DBMS Workshop Facilitator", d: "Led a peer technical workshop on database management systems at KMIT", kind: "Leadership" },
+  { t: "PRAKALP Hackathon", d: "Bluetooth Talking Vehicle prototype, team build", kind: "Hackathon" },
+  { t: "GeeksforGeeks Hackathon", d: "End-to-end system design, working prototype", kind: "Hackathon" },
+  { t: "Contributor, Rewriting the Code", d: "Nonprofit supporting women in tech — remote", kind: "Community", when: "Jun 2026 – now" },
+  { t: "Graphic Designer Intern", d: "PR Team, Student Council, KMIT — 20+ assets, 2,000+ reach", kind: "Design" },
+  { t: "NSS Volunteer", d: "Coordinated 5+ service drives, 40+ volunteer hours", kind: "Community", when: "Aug 2023 – now" },
+  { t: "Top 3% Statewide, Intermediate", d: "97.0% in MPC, Narayana Junior College", kind: "Academic", when: "2021 – 2023" },
 ];
 

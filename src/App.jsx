@@ -7,6 +7,7 @@ import HandOfCards from "./HandOfCards";
 import NeuralField from "./NeuralField";
 import CommandPalette from "./CommandPalette";
 import CaseStudies from "./CaseStudies";
+import Recognition from "./Recognition";
 import { BlurText, Counter, FillButton, LineMask, Magnetic, Reveal, ScrubText } from "./motion";
 import { EASE, scrollToId, useSmoothScroll } from "./smooth";
 import { ACHIEVEMENTS, CERTS, EDUCATION, EXPERIENCE, HIGHLIGHTS, LINKEDIN_POSTS, LINKS, NAV, PROJECTS, PUBLICATION, STACK, TICKER } from "./data";
@@ -1180,47 +1181,6 @@ function Terminal() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   RECOGNITION — certs + achievements
-   ══════════════════════════════════════════════════════════ */
-function Recognition() {
-  return (
-    <section id="recognition" className="relative py-28 sm:py-40">
-      <div className="wrap">
-        <SectionHead num="08" label="Recognition" aside="Certified, and on record" a="Certified," b="and" c="on record" />
-        <div className="mt-16 grid gap-14 lg:grid-cols-[1fr_1.6fr]">
-          <div>
-            <Reveal className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">Certifications</Reveal>
-            <div className="mt-5 border-t border-[var(--border)]">
-              {CERTS.map((c, i) => (
-                <Reveal key={c.t} delay={i * 0.05} className="flex items-baseline gap-5 border-b border-[var(--border)] py-5">
-                  <span className="font-mono text-xs text-[var(--accent)]">{String(i + 1).padStart(2, "0")}</span>
-                  <div>
-                    <div className="font-display text-lg font-medium tracking-[-0.02em]">{c.t}</div>
-                    <div className="text-sm text-[var(--muted)]">{c.o}</div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-          <div>
-            <Reveal className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">Achievements & activities</Reveal>
-            <div className="mt-5 border-t border-[var(--border)]">
-              {ACHIEVEMENTS.map((a, i) => (
-                <Reveal key={a.t} delay={i * 0.04} className="group grid grid-cols-[2.5rem_1fr] items-baseline gap-3 border-b border-[var(--border)] py-5 sm:grid-cols-[2.5rem_1fr_1.3fr]">
-                  <span className={`font-mono text-xs ${a.star ? "text-[var(--amber)]" : "text-[var(--muted-2)]"}`}>{a.star ? "★" : String(i + 1).padStart(2, "0")}</span>
-                  <div className="font-display text-lg font-medium tracking-[-0.02em] transition-transform duration-500 group-hover:translate-x-1.5">{a.t}</div>
-                  <div className="col-start-2 text-sm text-[var(--muted)] sm:col-start-auto">{a.d}</div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════
    CONTACT
    ══════════════════════════════════════════════════════════ */
 function Contact() {
@@ -1406,7 +1366,7 @@ export default function App() {
         <Stack />
         <Network />
         <Terminal />
-        <Recognition />
+        <Recognition num="08" Head={SectionHead} Arrow={Arrow} />
         <Contact />
       </main>
       <Footer />
