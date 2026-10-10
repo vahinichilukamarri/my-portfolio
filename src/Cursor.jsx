@@ -40,8 +40,9 @@ export default function Cursor() {
   const lastHoverEl = useRef(null);
   const soundOnRef = useRef(false);
 
-  const [active, setActive] = useState(false);
+  const [active] = useState(() => typeof window !== "undefined" && !window.matchMedia("(pointer: coarse)").matches);
   const [hover, setHover] = useState(false);
+  const [label, setLabel] = useState("");
   const [soundOn, setSoundOn] = useState(false);
 
   useEffect(() => {
@@ -49,10 +50,8 @@ export default function Cursor() {
   }, [soundOn]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.matchMedia("(pointer: coarse)").matches) return; // skip touch devices entirely
+    if (!active) return; // touch device — skip entirely
 
-    setActive(true);
     document.documentElement.classList.add("cw-cursor-active");
 
     const move = e => {
@@ -65,8 +64,8 @@ export default function Cursor() {
 
     let raf;
     const loop = () => {
-      ring.current.x += (pos.current.x - ring.current.x) * 0.2;
-      ring.current.y += (pos.current.y - ring.current.y) * 0.2;
+      ring.current.x += (pos.current.x - ring.current.x) * 0.16;
+      ring.current.y += (pos.current.y - ring.current.y) * 0.16;
       if (ringRef.current) {
         ringRef.current.style.transform = `translate3d(${ring.current.x}px, ${ring.current.y}px, 0) translate(-50%, -50%)`;
       }
@@ -76,6 +75,8 @@ export default function Cursor() {
 
     const onOver = e => {
       const el = e.target.closest ? e.target.closest(INTERACTIVE_SELECTOR) : null;
+      const labelled = e.target.closest ? e.target.closest("[data-cursor]") : null;
+      setLabel(labelled ? labelled.getAttribute("data-cursor") : "");
       if (el && el !== lastHoverEl.current) {
         lastHoverEl.current = el;
         setHover(true);
@@ -99,7 +100,7 @@ export default function Cursor() {
       cancelAnimationFrame(raf);
       document.documentElement.classList.remove("cw-cursor-active");
     };
-  }, []);
+  }, [active]);
 
   const toggleSound = () => {
     setSoundOn(v => {
@@ -117,8 +118,10 @@ export default function Cursor() {
 
   return (
     <>
-      <div ref={dotRef} className={`cw-cursor-dot ${hover ? "cw-cursor-dot--hover" : ""}`} />
-      <div ref={ringRef} className={`cw-cursor-ring ${hover ? "cw-cursor-ring--hover" : ""}`} />
+      <div ref={dotRef} className={`cw-cursor-dot ${hover || label ? "cw-cursor-dot--hover" : ""}`} />
+      <div ref={ringRef} className={`cw-cursor-ring ${hover ? "cw-cursor-ring--hover" : ""} ${label ? "cw-cursor-ring--label" : ""}`}>
+        <span className="cw-cursor-label">{label}</span>
+      </div>
       <button
         onClick={toggleSound}
         aria-label={soundOn ? "Mute interface sound" : "Enable interface sound"}

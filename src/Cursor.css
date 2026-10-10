@@ -1,7 +1,8 @@
 /* Custom cursor: a small dot that tracks the mouse exactly, and a
-   larger ring that trails behind with easing. Both scale/react when
-   hovering anything interactive. Disabled entirely on touch devices
-   (handled in Cursor.jsx before this class is ever applied). */
+   larger disc that trails behind with easing and inverts whatever it
+   passes over. It swells on anything interactive and shows a short
+   label over elements carrying data-cursor. Disabled entirely on touch
+   devices (handled in Cursor.jsx before this class is ever applied). */
 
 .cw-cursor-active,
 .cw-cursor-active * {
@@ -12,10 +13,11 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--cyan, #22d3ee);
+  background: #fff;
+  mix-blend-mode: difference;
   pointer-events: none;
   z-index: 9999;
   transform: translate3d(-100px, -100px, 0) translate(-50%, -50%);
@@ -30,21 +32,46 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  border: 1.5px solid var(--violet, #7c5cff);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  mix-blend-mode: difference;
   pointer-events: none;
   z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transform: translate3d(-100px, -100px, 0) translate(-50%, -50%);
-  transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  transition: width 0.45s cubic-bezier(.22,1,.36,1), height 0.45s cubic-bezier(.22,1,.36,1), background 0.35s ease, border-color 0.35s ease;
   will-change: transform;
 }
 .cw-cursor-ring--hover {
-  width: 56px;
-  height: 56px;
-  border-color: var(--cyan, #22d3ee);
-  background: rgba(34, 211, 238, 0.08);
+  width: 64px;
+  height: 64px;
+  background: #fff;
+  border-color: #fff;
+}
+.cw-cursor-ring--label {
+  width: 92px;
+  height: 92px;
+  mix-blend-mode: normal;
+  background: var(--accent, #b4a6ff);
+  border-color: var(--accent, #b4a6ff);
+}
+.cw-cursor-label {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #0a0a0b;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.3s ease, transform 0.45s cubic-bezier(.22,1,.36,1);
+}
+.cw-cursor-ring--label .cw-cursor-label {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .cw-sound-toggle {
@@ -56,7 +83,7 @@
   height: 42px;
   border-radius: 9999px;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-  background: var(--surface, rgba(20, 20, 28, 0.9));
+  background: rgba(17, 17, 19, 0.8);
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
@@ -66,5 +93,5 @@
 }
 .cw-sound-toggle:hover {
   transform: scale(1.08);
-  border-color: var(--violet, #7c5cff);
+  border-color: var(--accent, #b4a6ff);
 }

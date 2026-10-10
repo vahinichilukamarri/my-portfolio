@@ -1,6 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 
-/* All figures below are taken from the TRACE and LedgerGuard READMEs. */
+/* All figures below are taken from the MORPH, TRACE and LedgerGuard READMEs. */
+
+const MORPH_PIPELINE = [
+  { k: "Discover", t: "Two OpenAPI contracts → system model", d: "Each system's contract is parsed into a system model, with embeddings stored in pgvector for semantic matching." },
+  { k: "Map", t: "Model proposals, deterministic validation", d: "The model proposes field mappings between mismatched schemas; plain code validates them and assigns confidence." },
+  { k: "Review", t: "Human review gate", d: "If a required, writable target field isn't approved, the run is BLOCKED_PENDING_REVIEW — no model call, no code." },
+  { k: "Generate", t: "Integration code + its own tests", d: "From approved mappings it writes the integration module and a generated test suite to go with it." },
+  { k: "Gate", t: "Guards G1–G5 · AST · ruff · mypy strict", d: "Gates never loosen. The model can only change its own file — edited base tests, suppression comments, or extra type escapes are rejected." },
+  { k: "Sandbox", t: "Locked-down Docker execution", d: "Read-only root, internal network with only the mocks, no capabilities, 256 MB, 0.5 CPU, 64 processes, 60 s." },
+  { k: "Repair", t: "Bounded LangGraph repair loop", d: "Structured feedback drives at most 3 repairs. Every run ends READY or HUMAN_REVIEW_REQUIRED — never silently." },
+];
+
+const MORPH_STATS = [["≤3", "bounded repairs"], ["5", "guards that never loosen"], ["413", "hidden oracle checks"], ["60s", "sandbox time limit"]];
+
+const MORPH_FINDINGS = [
+  ["READY is not correct", "One run passed every gate and test MORPH controls and still failed 14 oracle checks — a pipeline grading itself would have counted it."],
+  ["Negative results stay in", "Conditions that reached READY on 0 of 3 are reported as results, in every denominator."],
+  ["The oracle never feeds repair", "A source-level test forbids the repair package from importing oracle or answer-key code."],
+];
 
 const TRACE_PIPELINE = [
   { k: "Ingest", t: "Payment failure event", d: "Idempotency check first — a duplicate event logs and returns the existing case instead of opening a new one." },
@@ -18,6 +36,8 @@ const TRACE_TRIGGERS = [
   "High-value transaction with a failed prior attempt",
   "Case history the heuristic's fit table can't represent",
 ];
+
+const TRACE_HEADLINE = [["+42%", "more revenue recovered"], ["+23%", "higher relative recovery rate"]];
 
 const TRACE_BENCH = [
   { label: "Cases correctly never pursued", trace: 98, base: 43, fmt: v => v, note: "declined up front because expected return didn't justify the cost" },
@@ -49,6 +69,8 @@ const LG_PHASES = [
 
 const LG_STATS = [["14", "locked, tagged phases"], ["38", "jqwik properties"], ["15", "chaos scenarios"], ["11", "forest features"]];
 
+const tint = (color, pct) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+
 function useInView(threshold = 0.25) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
@@ -63,40 +85,42 @@ function useInView(threshold = 0.25) {
 }
 
 function Panel({ children, className = "" }) {
-  return <div className={`rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 backdrop-blur-xl sm:p-7 ${className}`}>{children}</div>;
+  return <div className={`rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 ${className}`}>{children}</div>;
 }
 
 function Label({ color = "var(--violet)", children }) {
   return <div className="font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color }}>{children}</div>;
 }
 
-function TracePipeline() {
+function Pipeline({ stages, color, label, tagline, triggers, triggerAt }) {
   const [step, setStep] = useState(0);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (paused) return;
-    const id = setInterval(() => setStep(s => (s + 1) % TRACE_PIPELINE.length), 2200);
+    const id = setInterval(() => setStep(s => (s + 1) % stages.length), 2200);
     return () => clearInterval(id);
-  }, [paused]);
+  }, [paused, stages.length]);
+
+  const cur = stages[step];
 
   return (
     <Panel className="h-full">
       <div className="flex items-center justify-between">
-        <Label color="var(--rose)">Orchestration loop</Label>
+        <Label color={color}>{label}</Label>
         <span className="font-mono text-[10px] text-[var(--muted-2)]">{paused ? "paused" : "auto-playing"}</span>
       </div>
-      <p className="mt-2 text-sm text-[var(--muted)]"><b className="text-[var(--ink)]">The agent decides. The policy controls.</b> Hover or tap a stage to inspect it.</p>
+      <p className="mt-2 text-sm text-[var(--muted)]"><b className="font-medium text-[var(--ink)]">{tagline}</b> Hover or tap a stage to inspect it.</p>
 
       <div className="relative mt-6" onMouseLeave={() => setPaused(false)}>
         <ol className="space-y-1">
-          {TRACE_PIPELINE.map((s, i) => {
+          {stages.map((s, i) => {
             const on = i === step, done = i < step;
             return (
               <li key={s.k} className="relative">
-                {i < TRACE_PIPELINE.length - 1 && (
+                {i < stages.length - 1 && (
                   <span className="absolute left-[15px] top-[41px] bottom-[-14px] w-px bg-[var(--border-hi)]">
-                    <span className={`absolute inset-0 origin-top bg-gradient-to-b from-[var(--rose)] to-[var(--violet)] transition-transform duration-700 ease-out ${done ? "scale-y-100" : "scale-y-0"}`} />
+                    <span className={`absolute inset-0 origin-top transition-transform duration-700 ease-out ${done ? "scale-y-100" : "scale-y-0"}`} style={{ background: color }} />
                   </span>
                 )}
                 <button
@@ -104,13 +128,17 @@ function TracePipeline() {
                   onMouseEnter={() => { setPaused(true); setStep(i); }}
                   onFocus={() => { setPaused(true); setStep(i); }}
                   onClick={() => { setPaused(true); setStep(i); }}
-                  className={`relative flex w-full gap-4 rounded-xl py-2 pr-3 text-left transition-colors ${on ? "bg-[var(--rose)]/[0.07]" : ""}`}
+                  className="relative flex w-full gap-4 rounded-xl py-2 pr-3 text-left transition-colors"
+                  style={on ? { background: tint(color, 8) } : undefined}
                 >
-                  <span className={`relative z-10 mt-0.5 flex h-[31px] w-[31px] shrink-0 items-center justify-center rounded-full border font-mono text-[10px] transition-all duration-500 ${on ? "scale-110 border-[var(--rose)] bg-[var(--rose)] text-black shadow-[0_0_24px_rgba(251,113,133,0.55)]" : done ? "border-[var(--rose)]/50 bg-[#1a1016] text-[var(--rose)]" : "border-[var(--border-hi)] bg-[#0d0e14] text-[var(--muted-2)]"}`}>
+                  <span
+                    className={`relative z-10 mt-0.5 flex h-[31px] w-[31px] shrink-0 items-center justify-center rounded-full border font-mono text-[10px] transition-all duration-500 ${on ? "scale-110 text-black" : done ? "bg-[#141416]" : "border-[var(--border-hi)] bg-[#0f0f11] text-[var(--muted-2)]"}`}
+                    style={on ? { background: color, borderColor: color, boxShadow: `0 0 24px ${tint(color, 55)}` } : done ? { borderColor: tint(color, 50), color } : undefined}
+                  >
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="flex min-w-0 items-baseline gap-2 pt-1.5">
-                    <span className={`w-16 shrink-0 font-mono text-[10px] uppercase tracking-wider ${on ? "text-[var(--rose)]" : "text-[var(--muted-2)]"}`}>{s.k}</span>
+                    <span className="w-16 shrink-0 font-mono text-[10px] uppercase tracking-wider" style={{ color: on ? color : "var(--muted-2)" }}>{s.k}</span>
                     <span className={`text-sm font-semibold transition-colors ${on ? "text-[var(--ink)]" : "text-[var(--muted)]"}`}>{s.t}</span>
                   </span>
                 </button>
@@ -120,13 +148,13 @@ function TracePipeline() {
         </ol>
       </div>
 
-      <div key={step} className="animate-fade-up mt-5 min-h-[11rem] rounded-2xl border border-[var(--rose)]/25 bg-[var(--rose)]/[0.05] p-5">
-        <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--rose)]">Stage {String(step + 1).padStart(2, "0")} · {TRACE_PIPELINE[step].k}</div>
-        <div className="mt-1.5 font-semibold text-[var(--ink)]">{TRACE_PIPELINE[step].t}</div>
-        <p className="mt-2 text-[13px] leading-relaxed text-[var(--muted)]">{TRACE_PIPELINE[step].d}</p>
-        {TRACE_PIPELINE[step].k === "Decide" && (
+      <div key={step} className="animate-fade-up mt-5 min-h-[11rem] rounded-2xl border p-5" style={{ borderColor: tint(color, 25), background: tint(color, 5) }}>
+        <div className="font-mono text-[10px] uppercase tracking-[0.2em]" style={{ color }}>Stage {String(step + 1).padStart(2, "0")} · {cur.k}</div>
+        <div className="mt-1.5 font-semibold text-[var(--ink)]">{cur.t}</div>
+        <p className="mt-2 text-[13px] leading-relaxed text-[var(--muted)]">{cur.d}</p>
+        {triggers && cur.k === triggerAt && (
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {TRACE_TRIGGERS.map(tr => <span key={tr} className="rounded-full border border-[var(--rose)]/30 bg-[var(--rose)]/10 px-2 py-0.5 font-mono text-[10px] text-[var(--rose)]">{tr}</span>)}
+            {triggers.map(tr => <span key={tr} className="rounded-full border px-2 py-0.5 font-mono text-[10px]" style={{ color, borderColor: tint(color, 30), background: tint(color, 10) }}>{tr}</span>)}
           </div>
         )}
       </div>
@@ -141,6 +169,14 @@ function TraceBenchmark() {
       <div ref={ref}>
         <Label color="var(--rose)">Benchmark · 300 synthetic failed payments</Label>
         <p className="mt-2 text-sm text-[var(--muted)]">Same data, run through TRACE and through a static “retry → wait → remind → stop” baseline.</p>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          {TRACE_HEADLINE.map(([n, l]) => (
+            <div key={l} className="rounded-2xl border p-4" style={{ borderColor: tint("var(--rose)", 25), background: tint("var(--rose)", 6) }}>
+              <div className="font-display text-4xl font-medium tracking-[-0.05em] text-[var(--ink)]">{n}</div>
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[var(--rose)]">{l}</div>
+            </div>
+          ))}
+        </div>
         <div className="mt-6 space-y-6">
           {TRACE_BENCH.map((m, mi) => {
             const max = Math.max(m.trace, m.base);
@@ -150,7 +186,7 @@ function TraceBenchmark() {
                   <span className="text-sm font-semibold text-[var(--ink)]">{m.label}</span>
                   <span className="text-right font-mono text-[10px] text-[var(--muted-2)]">{m.note}</span>
                 </div>
-                {[["TRACE", m.trace, "from-[var(--rose)] to-[#f472b6]", "text-[var(--ink)]"], ["Baseline", m.base, "from-[#4b4f63] to-[#62667a]", "text-[var(--muted)]"]].map(([name, v, grad, txt], bi) => (
+                {[["TRACE", m.trace, "from-[var(--rose)] to-[#f9a8d4]", "text-[var(--ink)]"], ["Baseline", m.base, "from-[#46464d] to-[#5d5d66]", "text-[var(--muted)]"]].map(([name, v, grad, txt], bi) => (
                   <div key={name} className="mt-2 flex items-center gap-3">
                     <span className="w-16 shrink-0 font-mono text-[10px] uppercase tracking-wider text-[var(--muted-2)]">{name}</span>
                     <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
@@ -188,12 +224,42 @@ function TraceActions() {
   );
 }
 
+function MorphFindings() {
+  return (
+    <Panel>
+      <Label color="var(--violet)">Honest findings</Label>
+      <p className="mt-2 text-sm text-[var(--muted)]">Correctness is judged by a hand-written oracle the pipeline never sees.</p>
+      <div className="mt-5 space-y-3">
+        {MORPH_FINDINGS.map(([h, d]) => (
+          <div key={h} className="rounded-xl border border-[var(--border)] bg-black/20 p-4">
+            <div className="text-sm font-semibold text-[var(--ink)]">{h}</div>
+            <div className="mt-1 text-[13px] leading-relaxed text-[var(--muted)]">{d}</div>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function StatGrid({ stats, from, to }) {
+  return (
+    <div className="grid grid-cols-2 gap-5">
+      {stats.map(([n, l]) => (
+        <Panel key={l} className="flex flex-col justify-end">
+          <div className="font-display bg-clip-text text-5xl font-medium tracking-[-0.05em] text-transparent" style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}>{n}</div>
+          <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-[var(--muted)]">{l}</div>
+        </Panel>
+      ))}
+    </div>
+  );
+}
+
 function LedgerInvariant() {
   return (
     <Panel className="relative overflow-hidden">
       <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[var(--emerald)]/10 blur-3xl" />
       <Label color="var(--emerald)">The invariant</Label>
-      <blockquote className="font-display relative mt-4 text-xl leading-snug font-semibold text-[var(--ink)] sm:text-2xl">
+      <blockquote className="relative mt-4 font-serif text-2xl leading-snug text-[var(--ink)] italic sm:text-3xl">
         “For every transaction, and for every currency within it, the sum of debits must equal the sum of credits.”
       </blockquote>
       <p className="relative mt-3 text-sm text-[var(--muted)]">An unbalanced transaction is never persisted — not partially, not at all. The check runs before a single INSERT, inside the same transaction boundary.</p>
@@ -249,27 +315,26 @@ function LedgerPhases() {
 }
 
 const TABS = [
+  { id: "morph", name: "MORPH", sub: "Autonomous AI integration engineer", color: "var(--violet)", gh: "https://github.com/vahinichilukamarri/MORPH-Autonomous-AI-Integration-Engineer" },
   { id: "trace", name: "TRACE", sub: "AI revenue-recovery agent", color: "var(--rose)", gh: "https://github.com/vahinichilukamarri/TRACE", live: "https://trace-xi-nine.vercel.app" },
   { id: "ledger", name: "LedgerGuard", sub: "Payment integrity platform", color: "var(--emerald)", gh: "https://github.com/vahinichilukamarri/LedgerGuard" },
 ];
 
-export default function CaseStudies({ eyebrow }) {
-  const [tab, setTab] = useState("trace");
+export default function CaseStudies({ num, Head }) {
+  const [tab, setTab] = useState("morph");
   const current = TABS.find(t => t.id === tab);
+  const idx = TABS.indexOf(current);
 
   return (
-    <section id="deepdive" className="relative px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        {eyebrow}
-        <div className="mt-4 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          <div>
-            <h2 className="font-display text-4xl font-bold sm:text-5xl">Open the hood</h2>
-            <p className="mt-4 max-w-2xl text-[var(--muted)]">The two flagship systems, taken apart. Every number here comes from the repositories' own benchmark and test reports.</p>
-          </div>
-          <div role="tablist" aria-label="Case study" className="relative inline-flex self-start rounded-full border border-[var(--border)] bg-[var(--surface)] p-1 backdrop-blur-xl lg:self-auto">
+    <section id="deepdive" className="relative py-28 sm:py-40">
+      <div className="wrap">
+        <Head num={num} label="Deep Dive" aside="Numbers from the repos' own reports" a="Open" b="the hood" />
+        <div className="mt-8 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+          <p className="max-w-2xl text-lg text-[var(--muted)]">The three flagship systems, taken apart. Every number here comes from the repositories' own benchmark and test reports.</p>
+          <div role="tablist" aria-label="Case study" className="relative grid grid-cols-3 self-start rounded-full border border-[var(--border)] bg-[var(--surface)] p-1 backdrop-blur-xl lg:self-auto">
             <span
               className="absolute top-1 bottom-1 rounded-full transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)]"
-              style={{ left: tab === "trace" ? 4 : "50%", right: tab === "trace" ? "50%" : 4, background: `color-mix(in srgb, ${current.color} 18%, transparent)`, boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${current.color} 45%, transparent)` }}
+              style={{ left: `calc(4px + ${idx} * (100% - 8px) / 3)`, width: "calc((100% - 8px) / 3)", background: tint(current.color, 18), boxShadow: `inset 0 0 0 1px ${tint(current.color, 45)}` }}
             />
             {TABS.map(t => (
               <button
@@ -277,7 +342,7 @@ export default function CaseStudies({ eyebrow }) {
                 role="tab"
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
-                className="relative z-10 w-36 rounded-full px-4 py-2.5 text-center font-mono text-xs uppercase tracking-wider transition-colors sm:w-44"
+                className="relative z-10 w-[6.6rem] rounded-full px-3 py-2.5 text-center font-mono text-[11px] uppercase tracking-wider transition-colors sm:w-40 sm:text-xs"
                 style={{ color: tab === t.id ? t.color : "var(--muted)" }}
               >
                 {t.name}
@@ -293,26 +358,29 @@ export default function CaseStudies({ eyebrow }) {
             {current.live && <a href={current.live} target="_blank" rel="noreferrer" className="font-mono text-xs text-[var(--muted)] transition-colors hover:text-[var(--ink)]">Live app ↗</a>}
           </div>
 
-          {tab === "trace" ? (
+          {tab === "morph" && (
             <div className="grid gap-5 lg:grid-cols-[1.05fr_1fr]">
-              <TracePipeline />
+              <Pipeline stages={MORPH_PIPELINE} color="var(--violet)" label="Discover → generate → verify → repair" tagline="The model proposes. Deterministic code decides." />
+              <div className="grid content-start gap-5">
+                <StatGrid stats={MORPH_STATS} from="var(--violet)" to="var(--cyan)" />
+                <MorphFindings />
+              </div>
+            </div>
+          )}
+          {tab === "trace" && (
+            <div className="grid gap-5 lg:grid-cols-[1.05fr_1fr]">
+              <Pipeline stages={TRACE_PIPELINE} color="var(--rose)" label="Orchestration loop" tagline="The agent decides. The policy controls." triggers={TRACE_TRIGGERS} triggerAt="Decide" />
               <div className="grid gap-5">
                 <TraceBenchmark />
                 <TraceActions />
               </div>
             </div>
-          ) : (
+          )}
+          {tab === "ledger" && (
             <div className="grid gap-5">
               <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
                 <LedgerInvariant />
-                <div className="grid grid-cols-2 gap-5">
-                  {LG_STATS.map(([n, l]) => (
-                    <Panel key={l} className="flex flex-col justify-end">
-                      <div className="font-display bg-gradient-to-br from-[var(--emerald)] to-[var(--cyan)] bg-clip-text text-5xl font-bold text-transparent">{n}</div>
-                      <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-[var(--muted)]">{l}</div>
-                    </Panel>
-                  ))}
-                </div>
+                <StatGrid stats={LG_STATS} from="var(--emerald)" to="var(--cyan)" />
               </div>
               <LedgerPhases />
             </div>

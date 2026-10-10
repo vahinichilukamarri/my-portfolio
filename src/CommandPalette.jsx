@@ -53,7 +53,7 @@ export default function CommandPalette({ open, onClose, items }) {
           />
           <kbd className="rounded border border-[var(--border)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--muted-2)]">ESC</kbd>
         </div>
-        <div ref={listRef} className="max-h-[52vh] overflow-y-auto p-2">
+        <div ref={listRef} data-lenis-prevent className="max-h-[52vh] overflow-y-auto p-2">
           {results.length === 0 && <div className="px-3 py-8 text-center font-mono text-xs text-[var(--muted-2)]">no match for "{query}"</div>}
           {results.map((it, i) => {
             const header = i === 0 || results[i - 1].group !== it.group ? it.group : null;

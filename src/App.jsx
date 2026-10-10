@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, animate, motion, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from "motion/react";
 import "./App.css";
 import ContactWallet from "./Contactwallet";
 import Cursor from "./Cursor";
@@ -6,166 +7,11 @@ import HandOfCards from "./HandOfCards";
 import NeuralField from "./NeuralField";
 import CommandPalette from "./CommandPalette";
 import CaseStudies from "./CaseStudies";
+import { BlurText, Counter, FillButton, LineMask, Magnetic, Reveal, ScrubText } from "./motion";
+import { EASE, scrollToId, useSmoothScroll } from "./smooth";
+import { ACHIEVEMENTS, CERTS, EDUCATION, EXPERIENCE, HIGHLIGHTS, LINKEDIN_POSTS, LINKS, NAV, PROJECTS, PUBLICATION, STACK, TICKER } from "./data";
 
-// Swap these paths for your actual filenames if different.
-import linkedinPost1 from "./assets/offer_img.jpeg";
-import linkedinPost2 from "./assets/askbi.png";
-import linkedinPost3 from "./assets/PScertificate.png";
-
-/* ══════════════════════════════════════════════════════════
-   DATA — sourced from resume, edit freely
-   ══════════════════════════════════════════════════════════ */
-const LINKS = {
-  github: "https://github.com/vahinichilukamarri",
-  linkedin: "https://www.linkedin.com/in/venkata-vahini-chilukamarri-2b5064314/",
-  portfolio: "https://vahini-dev.vercel.app/",
-  email: "vahinivenkatac@gmail.com",
-  phone: "+91 8790261823",
-  resume: "https://drive.google.com/file/d/1hvl7eQHsGslxknRLoo8KhHc6KwRSmLvY/view?usp=sharing",
-};
-
-const NAV = [
-  { id: "hero", label: "Home", num: "00" },
-  { id: "about", label: "About", num: "01" },
-  { id: "experience", label: "Experience", num: "02" },
-  { id: "work", label: "Work", num: "03" },
-  { id: "deepdive", label: "Deep Dive", num: "04" },
-  { id: "stack", label: "Stack", num: "05" },
-  { id: "network", label: "Network", num: "06" },
-  { id: "terminal", label: "Terminal", num: "07" },
-  { id: "recognition", label: "Recognition", num: "08" },
-  { id: "contact", label: "Contact", num: "09" },
-];
-
-const TICKER = [
-  "whoami → venkata vahini chilukamarri",
-  "role → ai/ml engineer, full-stack developer",
-  "status → open to internships",
-  "cgpa → 9.12 / 10.0 · kmit",
-  "building → distributed systems, llm evaluation, rag pipelines",
-  "shipped → trace, ledgerguard — deployed, benchmarked, documented",
-];
-
-const EXPERIENCE = {
-  org: "Salesforce Mentorship Program",
-  role: "Software Engineering Mentee — Microservice Health & API Performance Orchestrator",
-  where: "GitHub · Remote",
-  when: "June 2026 – August 2026",
-  gh: "https://github.com/Harshitha-Macha/Automated-Microservice-Health-API-Performance-Orchestrator-v2",
-  points: [
-    "Designed a dependency-graph engine that auto-discovers service dependencies from OpenTelemetry trace spans, using Tarjan's SCC to detect and collapse circular dependencies before analysis.",
-    "Built a root-cause analysis engine combining topological root-finding with time-correlation ranking, plus cycle-safe BFS/DFS blast-radius computation to predict cascading failure impact.",
-    "Built a deduplicated Slack/Discord alerting pipeline with flap suppression and retry/fallback logging, backed by a SQLite incident store and a live Cytoscape.js dependency dashboard.",
-  ],
-  stack: ["FastAPI", "OpenTelemetry", "SQLite", "Cytoscape.js", "Slack API", "Graph Algorithms"],
-};
-
-const PROJECTS = [
-  {
-    no: "01", title: "TRACE", sub: "Bounded AI agent for failed-payment recovery · Razorpay AI Buildathon",
-    accent: "rose", featured: true,
-    desc: "A failed payment isn't a lost customer. TRACE evaluates whether recovering it is worth the effort, picks the single best next action, executes it, adapts to the outcome, and knows when to stop — with a deterministic policy layer that can veto it before anything runs.",
-    points: [
-      "Dual-engine design: a free deterministic heuristic scores every case; an LLM (Groq) is escalated to only when one of four uncertainty signals fires",
-      "A 9-rule, 100% deterministic policy layer overrides the agent before execution — auditable independently of the AI",
-      "Benchmarked against a static baseline on 300 synthetic cases: 98 cases correctly never pursued (vs. 43) at ₹873 recovered per intervention (vs. ₹766)",
-    ],
-    stack: ["React", "FastAPI", "SQLAlchemy", "Groq LLM", "PostgreSQL", "Vercel", "Render"],
-    gh: "https://github.com/vahinichilukamarri/TRACE",
-    live: "https://trace-xi-nine.vercel.app",
-  },
-  {
-    no: "02", title: "LedgerGuard", sub: "Payment integrity platform · deterministic ledger guarantees",
-    accent: "emerald", featured: true,
-    desc: "A payment-integrity platform built in 14 locked, tagged phases — enforcing that debits equal credits for every transaction before it's ever persisted, then independently verifying, stress-testing, and explaining anything that looks wrong.",
-    points: [
-      "Double-entry invariant enforced inside the same transaction boundary as the write — no half-committed unbalanced state is ever visible",
-      "Two independent anomaly detectors — a statistical composite and a hand-rolled Isolation Forest — scored in parallel and never blended into one number",
-      "38 property-based tests (jqwik) plus 15 deterministic chaos-engineering fault injections at the JDBC, broker, and clock seams",
-    ],
-    stack: ["Java", "Spring Boot", "PostgreSQL", "Kafka", "Flyway", "React", "TypeScript"],
-    gh: "https://github.com/vahinichilukamarri/LedgerGuard",
-  },
-  {
-    no: "03", title: "Microservice Health Orchestrator", sub: "Observability platform · root-cause & blast-radius analysis",
-    accent: "violet",
-    desc: "The applied output of the Salesforce mentorship — a self-hosted platform that watches a microservice fleet, finds the root cause of an incident, and estimates blast radius before it spreads.",
-    points: ["Dependency graph auto-discovered from OTel spans; cycles resolved with Tarjan's SCC", "Root-cause via topological root-finding + time-correlation ranking", "Cycle-safe BFS/DFS blast-radius detection feeding a live Cytoscape.js dashboard"],
-    stack: ["React", "FastAPI", "OpenTelemetry", "SQLite"],
-    gh: EXPERIENCE.gh,
-  },
-  {
-    no: "04", title: "EvalEngine", sub: "LLM evaluation & improvement engine",
-    accent: "cyan",
-    desc: "A judge for other models. Generates, scores, and ranks multiple AI responses through structured multi-metric analysis, mimicking RLHF-style iterative refinement.",
-    points: ["LLM-as-judge scoring across relevance, correctness, completeness, and bias", "Feedback-driven refinement loop with an interactive Streamlit dashboard", "Currently extending with hallucination detection and RAG for factual grounding"],
-    stack: ["Python", "Streamlit", "LLM APIs", "Pandas", "Scikit-learn"],
-    gh: "https://github.com/vahinichilukamarri/llm-evaluation-engine.git",
-  },
-  {
-    no: "05", title: "AskBI", sub: "Plain-English business intelligence",
-    accent: "amber",
-    desc: "Ask a structured dataset a question in plain English and get back SQL, a result set, and a chart — built so non-technical teams can query and visualize data directly.",
-    points: ["Natural-language-to-SQL via an LLM-based query generation pipeline", "FastAPI + Pandas backend for execution against real datasets", "React dashboard for real-time result visualization"],
-    stack: ["React", "FastAPI", "Pandas", "LLM APIs", "SQL"],
-    gh: "https://github.com/vahinichilukamarri/AskBI",
-  },
-  {
-    no: "06", title: "MoodAngels", sub: "AI-based psychiatric diagnostic support",
-    accent: "violet",
-    desc: "A multi-agent NLP system that analyzes behavioral and textual patient data to assist diagnostic reasoning, evaluated on a synthetic dataset of 500+ case records.",
-    points: ["Multi-agent architecture splitting behavioral vs. textual signal analysis", "NLP pipeline for pattern extraction across patient case records", "Evaluated on 500+ synthetic diagnostic cases for reasoning consistency"],
-    stack: ["Python", "NLP", "MERN Stack"],
-    gh: "https://github.com/AnishaPaturi/Mood-Angles",
-  },
-  {
-    no: "07", title: "SafeStreet", sub: "Vision-Transformer road damage detection",
-    accent: "cyan",
-    desc: "A Vision Transformer trained to classify road damage, served through a Node.js REST API with a React Native field app and a React.js geolocation dashboard for end-to-end reporting.",
-    points: ["ViT model trained for multi-class road damage classification", "Node.js REST API serving predictions to mobile and web clients", "React Native capture app + React.js geolocation dashboard"],
-    stack: ["Vision Transformer", "React Native", "React", "Node.js"],
-    gh: LINKS.github,
-  },
-];
-
-const STACK = [
-  { cat: "Languages", accent: "violet", items: ["Python", "JavaScript", "TypeScript", "Java", "C / C++", "SQL", "HTML / CSS"] },
-  { cat: "Full-Stack & Frameworks", accent: "cyan", items: ["React", "React Router", "Node.js", "Express", "FastAPI", "Spring Boot", "REST APIs", "MERN Stack", "React Native", "Streamlit"] },
-  { cat: "AI / ML & Deep Learning", accent: "amber", items: ["TensorFlow", "PyTorch", "Keras", "Hugging Face", "Vision Transformers", "NLP", "RAG", "Prompt Engineering", "Fine-tuning", "LLM APIs (Groq)"] },
-  { cat: "Data & Tooling", accent: "violet", items: ["PostgreSQL", "MySQL", "MongoDB", "SQLite", "Kafka", "Flyway", "Git / GitHub", "Jira", "Docker", "Jupyter", "Pandas", "NumPy", "Scikit-learn"] },
-  { cat: "Core Concepts", accent: "cyan", items: ["Data Structures & Algorithms", "OOP", "Distributed Systems & Observability", "Property-Based Testing", "Chaos Engineering", "CI/CD", "SDLC"] },
-];
-
-// Real LinkedIn posts — tags pulled from each post's own hashtags, links go straight to the post.
-const LINKEDIN_POSTS = [
-  { img: linkedinPost1, tags: ["Centific", "Hackathon", "ArtificialIntelligence"], url: "https://www.linkedin.com/posts/venkata-vahini-chilukamarri-2b5064314_centific-hackathon-artificialintelligence-activity-7458464588808863745-sTxB" },
-  { img: linkedinPost2, tags: ["AI", "MachineLearning", "DataScience"], url: "https://www.linkedin.com/posts/venkata-vahini-chilukamarri-2b5064314_ai-machinelearning-datascience-activity-7448384011443433472-7ekJ" },
-  { img: linkedinPost3, tags: ["ReactNative", "AI", "ComputerVision"], url: "https://www.linkedin.com/posts/venkata-vahini-chilukamarri-2b5064314_reactnative-ai-computervision-activity-7380108463823056896-DkQd" },
-];
-
-const CERTS = [
-  { t: "SQL (Intermediate)", o: "HackerRank" },
-  { t: "Generative AI for Beginners", o: "GreatLearning" },
-  { t: "Generative AI Workshop", o: "Skilligence Edtech × IIT Hyderabad" },
-];
-
-const ACHIEVEMENTS = [
-  { t: "DBMS Workshop Facilitator", d: "Co-taught a peer workshop on database systems at KMIT" },
-  { t: "PRAKALP Hackathon", d: "Bluetooth Talking Vehicle prototype, team build" },
-  { t: "GeeksforGeeks Hackathon", d: "End-to-end system design, working prototype" },
-  { t: "Contributor, Rewriting the Code", d: "Durham, NC nonprofit — remote, since June 2026" },
-  { t: "Graphic Designer Intern", d: "PR Team, Student Council, KMIT — 20+ assets, 2,000+ reach" },
-  { t: "NSS Volunteer", d: "5+ community drives, 40+ volunteer hours since Aug 2023" },
-  { t: "Top 3% Statewide, Intermediate", d: "97.0% in MPC, Narayana Junior College" },
-];
-
-const ACCENT = {
-  violet: { text: "text-[var(--violet)]", ring: "ring-[var(--violet)]/30", bg: "bg-[var(--violet)]/10", border: "border-[var(--violet)]/30", dot: "bg-[var(--violet)]" },
-  cyan: { text: "text-[var(--cyan)]", ring: "ring-[var(--cyan)]/30", bg: "bg-[var(--cyan)]/10", border: "border-[var(--cyan)]/30", dot: "bg-[var(--cyan)]" },
-  amber: { text: "text-[var(--amber)]", ring: "ring-[var(--amber)]/30", bg: "bg-[var(--amber)]/10", border: "border-[var(--amber)]/30", dot: "bg-[var(--amber)]" },
-  emerald: { text: "text-[var(--emerald)]", ring: "ring-[var(--emerald)]/30", bg: "bg-[var(--emerald)]/10", border: "border-[var(--emerald)]/30", dot: "bg-[var(--emerald)]" },
-  rose: { text: "text-[var(--rose)]", ring: "ring-[var(--rose)]/30", bg: "bg-[var(--rose)]/10", border: "border-[var(--rose)]/30", dot: "bg-[var(--rose)]" },
-};
+const accent = a => `var(--${a})`;
 
 /* ══════════════════════════════════════════════════════════
    TERMINAL COMMANDS — driven entirely by this page's own data
@@ -199,6 +45,8 @@ function useTerminalCommands() {
           "  cat <repo>        repo description",
           "  open <repo|#>     open repo on github",
           "  experience        salesforce mentorship",
+          "  publications      research papers",
+          "  education         degrees",
           "  achievements      awards & activities",
           "  certs             certifications",
           "  contact           how to reach me",
@@ -210,9 +58,9 @@ function useTerminalCommands() {
       case "whoami":
       case "about":
         return [
-          "vahini chilukamarri",
-          "4th-year cs @ kmit, hyderabad · cgpa 9.12",
-          "ai/ml engineer · full-stack developer",
+          "venkata vahini chilukamarri",
+          "final-year cse @ kmit, hyderabad · cgpa 9.12",
+          "software engineer · ai engineer · research co-author",
           "status: open to internships",
         ];
       case "stack":
@@ -222,7 +70,7 @@ function useTerminalCommands() {
         if (/resume/i.test(arg)) return [`resume → ${LINKS.resume}`];
         {
           const r = findRepo(arg);
-          if (r) return [r.title, r.desc, `stack: ${r.stack.join(", ")}`, `source: ${r.gh}`];
+          if (r) return [r.title, r.desc, `stack: ${r.stack.join(", ")}`, `source: ${r.gh || "not yet public"}`];
         }
         return [`cat: ${arg}: no such file`];
       case "open":
@@ -230,11 +78,17 @@ function useTerminalCommands() {
         if (/portfolio/i.test(arg)) { window.open(LINKS.portfolio, "_blank"); return ["opening portfolio ↗"]; }
         {
           const r = findRepo(arg);
-          if (r) { window.open(r.gh, "_blank"); return [`opening ${r.slug} ↗`]; }
+          if (r && r.gh) { window.open(r.gh, "_blank"); return [`opening ${r.slug} ↗`]; }
+          if (r) return [`${r.slug}: source not public yet`];
         }
         return [`open: ${arg || "?"} — not found, try 'ls'`];
       case "experience":
         return [`${EXPERIENCE.org} — ${EXPERIENCE.when}`, EXPERIENCE.role, ...EXPERIENCE.points.map(p => `  - ${p}`)];
+      case "publications":
+      case "papers":
+        return [`${PUBLICATION.title} — ${PUBLICATION.kind}`, PUBLICATION.status, ...PUBLICATION.points.map(p => `  - ${p}`)];
+      case "education":
+        return EDUCATION.map(e => `- ${e.school} · ${e.degree} · ${e.score} · ${e.when}`);
       case "achievements":
         return ACHIEVEMENTS.map(a => `- ${a.t}: ${a.d}`);
       case "certs":
@@ -254,193 +108,221 @@ function useTerminalCommands() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   HELPERS
+   SMALL HELPERS
    ══════════════════════════════════════════════════════════ */
-function Reveal({ children, delay = 0, className = "" }) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
+const fmtClock = () => new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }).format(new Date());
+
+function useClock() {
+  const [t, setT] = useState(fmtClock);
   useEffect(() => {
-    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); o.disconnect(); } }, { threshold: 0.12 });
-    if (ref.current) o.observe(ref.current);
-    return () => o.disconnect();
+    const id = setInterval(() => setT(fmtClock()), 10000);
+    return () => clearInterval(id);
   }, []);
-  return <div ref={ref} className={`reveal ${visible ? "in" : ""} ${className}`} style={{ transitionDelay: `${delay}s` }}>{children}</div>;
+  return t;
 }
 
-const SCRAMBLE_CHARS = "!<>-_\\/[]{}=+*^?#01ABCDEFXYZ";
-
-function Scramble({ text, offset = 0 }) {
-  const [out, setOut] = useState(text);
+function useIsDesktop() {
+  const q = "(min-width: 1024px)";
+  const [is, setIs] = useState(() => typeof window !== "undefined" && window.matchMedia(q).matches);
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let raf = 0, last = 0;
-    const t0 = performance.now();
-    const settleAt = i => 260 + offset + i * 55;
-    const total = settleAt(text.length);
-    const tick = now => {
-      const elapsed = now - t0;
-      if (elapsed >= total) { setOut(text); return; }
-      if (now - last > 45) {
-        last = now;
-        setOut(text.split("").map((ch, i) => (elapsed >= settleAt(i) ? ch : SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)])).join(""));
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [text, offset]);
-  return <span aria-label={text}><span aria-hidden="true">{out}</span></span>;
+    const m = window.matchMedia(q);
+    const on = () => setIs(m.matches);
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, []);
+  return is;
 }
 
-function Magnetic({ children, strength = 0.28 }) {
-  const ref = useRef(null);
-  const onMove = e => {
-    const el = ref.current;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - (r.left + r.width / 2)) * strength;
-    const y = (e.clientY - (r.top + r.height / 2)) * strength;
-    el.style.transform = `translate(${x}px, ${y}px)`;
-  };
-  const onLeave = () => { ref.current.style.transform = "translate(0, 0)"; };
+function Title({ a, b, c, className = "" }) {
   return (
-    <span ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="inline-block transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)]">
-      {children}
-    </span>
+    <h2 className={`font-display text-[clamp(2.6rem,7.2vw,6.8rem)] leading-[0.94] font-medium tracking-[-0.05em] ${className}`}>
+      {a && <BlurText text={a} />}{" "}
+      {b && <em className="font-serif font-normal italic tracking-[-0.02em] text-[var(--accent)]"><BlurText text={b} delay={0.12} /></em>}{" "}
+      {c && <BlurText text={c} delay={0.2} />}
+    </h2>
+  );
+}
+
+function SectionHead({ num, label, aside, ...title }) {
+  return (
+    <div>
+      <div className="flex items-center gap-4 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+        <span className="shrink-0"><span className="text-[var(--accent)]">({num})</span> {label}</span>
+        <motion.span
+          className="h-px flex-1 origin-left bg-[var(--border-hi)]"
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.6, ease: EASE }}
+        />
+        {aside && <span className="hidden shrink-0 sm:inline">{aside}</span>}
+      </div>
+      <Title className="mt-8" {...title} />
+    </div>
+  );
+}
+
+function Arrow({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`h-[1em] w-[1em] ${className}`} fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <path d="M7 17 17 7M8 7h9v9" />
+    </svg>
   );
 }
 
 function ScrollProgress() {
-  const ref = useRef(null);
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      if (ref.current) ref.current.style.transform = `scaleX(${max > 0 ? window.scrollY / max : 0})`;
-    };
-    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); cancelAnimationFrame(raf); };
-  }, []);
-  return <div ref={ref} aria-hidden="true" className="fixed top-0 left-0 z-[60] h-[2px] w-full origin-left bg-gradient-to-r from-[var(--violet)] via-[var(--indigo)] to-[var(--cyan)]" style={{ transform: "scaleX(0)" }} />;
-}
-
-function StackMarquee() {
-  const rows = [
-    STACK.slice(0, 3).flatMap(s => s.items),
-    STACK.slice(3).flatMap(s => s.items),
-  ];
-  return (
-    <div className="relative space-y-3 overflow-hidden border-y border-[var(--border)] bg-[var(--surface)] py-5 marquee-mask" aria-label="Tech stack">
-      {rows.map((items, r) => (
-        <div key={r} className={`flex w-max gap-3 ${r === 0 ? "animate-marquee" : "animate-marquee-reverse"}`}>
-          {[...items, ...items].map((it, i) => (
-            <span key={i} aria-hidden={i >= items.length} className="flex items-center gap-3 whitespace-nowrap rounded-full border border-[var(--border)] bg-black/20 px-4 py-1.5 font-mono text-xs text-[var(--muted)]">
-              <span className={`h-1.5 w-1.5 rounded-full ${["bg-[var(--violet)]", "bg-[var(--cyan)]", "bg-[var(--amber)]", "bg-[var(--emerald)]", "bg-[var(--rose)]"][i % 5]}`} />
-              {it}
-            </span>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Eyebrow({ num, children }) {
-  return (
-    <div className="flex items-center gap-3 font-mono text-xs tracking-[0.25em] text-[var(--muted)] uppercase">
-      <span className="text-[var(--violet)]">{num}</span>
-      <span className="h-px w-8 bg-[var(--border-hi)]" />
-      {children}
-    </div>
-  );
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
+  return <motion.div aria-hidden="true" style={{ scaleX }} className="fixed top-0 left-0 z-[60] h-[2px] w-full origin-left bg-[var(--accent)]" />;
 }
 
 /* ══════════════════════════════════════════════════════════
-   BACKDROP — animated gradient mesh + drifting grid
+   INTRO — a short counter + curtain, once per session
    ══════════════════════════════════════════════════════════ */
-function Backdrop() {
+function Intro({ onDone }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const c = animate(0, 100, { duration: 1.5, ease: [0.65, 0, 0.35, 1], onUpdate: v => setN(Math.round(v)), onComplete: () => setTimeout(onDone, 200) });
+    return () => { c.stop(); document.body.style.overflow = prev; };
+  }, [onDone]);
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-[var(--bg)]">
-      <div className="absolute inset-0 bg-grid opacity-40" />
-      <div className="animate-blob absolute -top-40 -left-40 h-[36rem] w-[36rem] rounded-full bg-[var(--indigo)]/25 blur-[120px]" />
-      <div className="animate-blob-slow absolute top-1/3 -right-40 h-[30rem] w-[30rem] rounded-full bg-[var(--cyan)]/15 blur-[120px]" />
-      <div className="animate-blob absolute bottom-0 left-1/4 h-[26rem] w-[26rem] rounded-full bg-[var(--amber)]/10 blur-[130px]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg)]" />
-    </div>
+    <motion.div
+      exit={{ clipPath: "inset(0 0 100% 0)" }}
+      initial={{ clipPath: "inset(0 0 0% 0)" }}
+      transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
+      className="fixed inset-0 z-[100] flex flex-col justify-between bg-[var(--ink)] p-[var(--gutter)] text-[var(--bg)]"
+    >
+      <div className="flex justify-between font-mono text-[11px] uppercase tracking-[0.18em]">
+        <span>Venkata Vahini Chilukamarri</span>
+        <span>Portfolio ©2026</span>
+      </div>
+      <div className="flex items-end justify-between gap-6">
+        <div className="max-w-xs font-serif text-2xl italic leading-tight sm:text-3xl">Software that’s verified, not trusted.</div>
+        <div className="font-display text-[clamp(5rem,22vw,18rem)] leading-[0.8] font-medium tracking-[-0.06em] tabular-nums">{n}<span className="text-[0.35em] align-top">%</span></div>
+      </div>
+    </motion.div>
   );
 }
 
 /* ══════════════════════════════════════════════════════════
    NAV
    ══════════════════════════════════════════════════════════ */
+const NAV_PRIMARY = ["about", "experience", "work", "deepdive", "stack", "contact"];
+
 function Nav({ onOpenPalette }) {
   const [active, setActive] = useState("hero");
-  const [open, setOpen] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const clock = useClock();
+  const { scrollY } = useScroll();
+
+  useMotionValueEvent(scrollY, "change", y => {
+    const prev = scrollY.getPrevious() ?? 0;
+    setHidden(y > prev && y > 400 && !menu);
+    setScrolled(y > 30);
+    const probe = y + window.innerHeight * 0.35;
+    let cur = "hero";
+    NAV.forEach(n => { const el = document.getElementById(n.id); if (el && el.offsetTop <= probe) cur = n.id; });
+    setActive(cur);
+  });
 
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 20);
-      const y = window.scrollY + window.innerHeight * 0.35;
-      let cur = "hero";
-      NAV.forEach(n => { const el = document.getElementById(n.id); if (el && el.offsetTop <= y) cur = n.id; });
-      setActive(cur);
-    };
-    window.addEventListener("scroll", onScroll);
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    if (!menu) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = e => e.key === "Escape" && setMenu(false);
+    window.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
+  }, [menu]);
 
-  const goTo = id => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setOpen(false); };
+  const goTo = id => { setMenu(false); setTimeout(() => scrollToId(id), menu ? 350 : 0); };
 
   return (
-    <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled ? "bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)]" : "bg-transparent"}`}>
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <button onClick={() => goTo("hero")} className="font-display text-lg font-bold tracking-tight">
-          VC<span className="text-[var(--violet)]">.</span>
-        </button>
-        <nav className="hidden xl:flex items-center gap-0.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 backdrop-blur-xl">
-          {NAV.filter(n => n.id !== "hero").map(n => (
-            <button
-              key={n.id}
-              onClick={() => goTo(n.id)}
-              className={`rounded-full px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-all ${active === n.id ? "bg-white text-black" : "text-[var(--muted)] hover:text-[var(--ink)]"}`}
-            >
-              {n.label}
-            </button>
-          ))}
-        </nav>
-        <div className="hidden xl:flex items-center gap-2">
-          <button onClick={onOpenPalette} aria-label="Open command palette" className="flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-[11px] text-[var(--muted)] backdrop-blur-xl transition-colors hover:border-[var(--violet)]/50 hover:text-[var(--ink)]">
-            <kbd className="font-mono">⌘K</kbd>
+    <>
+      <motion.header
+        animate={{ y: hidden ? "-110%" : "0%" }}
+        transition={{ duration: 0.5, ease: EASE }}
+        className={`fixed top-0 z-[80] w-full transition-[background-color,border-color] duration-500 ${scrolled && !menu ? "border-b border-[var(--border)] bg-[var(--bg)]/70 backdrop-blur-xl" : "border-b border-transparent"}`}
+      >
+        <div className="wrap flex items-center justify-between py-4">
+          <button onClick={() => goTo("hero")} className="group flex items-center gap-3 text-left" aria-label="Back to top">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-hi)] font-serif text-lg italic transition-colors group-hover:bg-[var(--ink)] group-hover:text-[var(--bg)]">v</span>
+            <span className="hidden font-mono text-[11px] uppercase leading-tight tracking-[0.14em] sm:block">
+              Vahini C.<br /><span className="text-[var(--muted-2)]">SWE · AI Engineer</span>
+            </span>
           </button>
-          <Magnetic>
-            <a href={LINKS.resume} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--indigo)] px-5 py-2 font-mono text-[11px] uppercase tracking-wider text-white shadow-lg shadow-[var(--indigo)]/25">
-              Resume ↗
-            </a>
-          </Magnetic>
-        </div>
-        <button onClick={() => setOpen(o => !o)} className="xl:hidden flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full border border-[var(--border)]" aria-label="Menu">
-          <span className={`h-px w-5 bg-[var(--ink)] transition-transform ${open ? "translate-y-[3px] rotate-45" : ""}`} />
-          <span className={`h-px w-5 bg-[var(--ink)] transition-opacity ${open ? "opacity-0" : ""}`} />
-          <span className={`h-px w-5 bg-[var(--ink)] transition-transform ${open ? "-translate-y-[3px] -rotate-45" : ""}`} />
-        </button>
-      </div>
-      {open && (
-        <div className="xl:hidden max-h-[calc(100vh-72px)] overflow-y-auto border-t border-[var(--border)] bg-[var(--bg)]/95 backdrop-blur-xl px-6 py-4">
-          {NAV.map(n => (
-            <button key={n.id} onClick={() => goTo(n.id)} className={`flex w-full items-center justify-between border-b border-[var(--border)] py-3 font-mono text-sm uppercase tracking-wider last:border-0 ${active === n.id ? "text-[var(--ink)]" : "text-[var(--muted)]"}`}>
-              {n.label}<span className="text-[var(--violet)]">{n.num}</span>
+
+          <nav className="hidden items-center gap-7 xl:flex" aria-label="Primary">
+            {NAV.filter(n => NAV_PRIMARY.includes(n.id)).map(n => (
+              <button key={n.id} onClick={() => goTo(n.id)} className="group relative flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em]">
+                <span className={`h-1.5 w-1.5 rounded-full bg-[var(--accent)] transition-all duration-500 ${active === n.id ? "scale-100 opacity-100" : "scale-0 opacity-0"}`} />
+                <span className="relative block overflow-hidden">
+                  <span className={`block transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:-translate-y-full ${active === n.id ? "text-[var(--ink)]" : "text-[var(--muted)]"}`}>{n.label}</span>
+                  <span className="absolute inset-0 block translate-y-full text-[var(--ink)] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-y-0" aria-hidden="true">{n.label}</span>
+                </span>
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <span className="mr-2 hidden font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] lg:inline">HYD {clock} IST</span>
+            <button onClick={onOpenPalette} aria-label="Open command palette" className="hidden h-10 items-center rounded-full border border-[var(--border)] px-3.5 font-mono text-[11px] text-[var(--muted)] transition-colors hover:border-[var(--border-hi)] hover:text-[var(--ink)] md:flex">⌘K</button>
+            <div className="hidden md:block">
+              <FillButton href={LINKS.resume} className="!py-3">Resume <Arrow /></FillButton>
+            </div>
+            <button onClick={() => setMenu(m => !m)} aria-expanded={menu} aria-label="Menu" className="flex h-10 items-center gap-2.5 rounded-full border border-[var(--border-hi)] bg-[var(--bg)]/40 px-4 font-mono text-[11px] uppercase tracking-[0.14em] backdrop-blur">
+              <span className="relative h-2 w-4">
+                <span className={`absolute left-0 h-px w-4 bg-[var(--ink)] transition-all duration-500 ${menu ? "top-1 rotate-45" : "top-0"}`} />
+                <span className={`absolute left-0 h-px w-4 bg-[var(--ink)] transition-all duration-500 ${menu ? "top-1 -rotate-45" : "top-2"}`} />
+              </span>
+              {menu ? "Close" : "Menu"}
             </button>
-          ))}
-          <a href={LINKS.resume} target="_blank" rel="noreferrer" className="mt-4 flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--indigo)] py-3 font-mono text-xs uppercase tracking-wider text-white">
-            Resume ↗
-          </a>
+          </div>
         </div>
-      )}
-    </header>
+      </motion.header>
+
+      <AnimatePresence>
+        {menu && (
+          <motion.div
+            data-lenis-prevent
+            initial={{ clipPath: "circle(0% at 95% 4%)" }}
+            animate={{ clipPath: "circle(150% at 95% 4%)" }}
+            exit={{ clipPath: "circle(0% at 95% 4%)" }}
+            transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+            className="fixed inset-0 z-[75] overflow-y-auto bg-[var(--bg-2)]"
+          >
+            <div className="wrap grid min-h-full gap-12 pt-28 pb-10 lg:grid-cols-[1.6fr_1fr]">
+              <ul>
+                {NAV.map((n, i) => (
+                  <motion.li key={n.id} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 + i * 0.04, duration: 0.7, ease: EASE }} className="border-b border-[var(--border)]">
+                    <button onClick={() => goTo(n.id)} className="group flex w-full items-baseline gap-5 py-2.5 text-left">
+                      <span className="w-8 font-mono text-[11px] text-[var(--muted-2)]">{n.num}</span>
+                      <span className={`font-display text-[clamp(2rem,5vw,3.6rem)] leading-none font-medium tracking-[-0.04em] transition-all duration-500 group-hover:translate-x-3 group-hover:text-[var(--accent)] ${active === n.id ? "text-[var(--ink)]" : "text-[var(--muted)]"}`}>{n.label}</span>
+                    </button>
+                  </motion.li>
+                ))}
+              </ul>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex flex-col justify-end gap-8 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">
+                <div className="space-y-2">
+                  <div className="text-[var(--muted-2)]">Elsewhere</div>
+                  {[["GitHub", LINKS.github], ["LinkedIn", LINKS.linkedin], ["Resume", LINKS.resume]].map(([l, h]) => (
+                    <a key={l} href={h} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[var(--ink)] hover:text-[var(--accent)]">{l} <Arrow /></a>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  <div className="text-[var(--muted-2)]">Say hi</div>
+                  <a href={`mailto:${LINKS.email}`} className="block normal-case text-[var(--ink)] hover:text-[var(--accent)]">{LINKS.email}</a>
+                </div>
+                <button onClick={() => { setMenu(false); onOpenPalette(); }} className="self-start rounded-full border border-[var(--border-hi)] px-4 py-2 text-[var(--ink)]">⌘K — jump anywhere</button>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -468,70 +350,129 @@ function Ticker() {
   }, [text, deleting, i]);
 
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 backdrop-blur-xl">
-      <span className="h-2 w-2 rounded-full bg-[var(--cyan)] shadow-[0_0_10px_var(--cyan)]" />
-      <span className="font-mono text-xs text-[var(--muted)]">
-        <span className="text-[var(--ink)]">$</span> {text}<span className="animate-caret text-[var(--cyan)]">▍</span>
-      </span>
+    <span className="font-mono text-[11px] text-[var(--muted)]">
+      <span className="text-[var(--accent)]">$</span> {text}<span className="animate-caret text-[var(--accent)]">▍</span>
+    </span>
+  );
+}
+
+const ROLES = ["Software Engineer", "AI Engineer", "LLM Agents & Evals", "Research Co-author"];
+
+function Hero({ ready }) {
+  const fade = d => ({ initial: { opacity: 0, y: 16 }, animate: ready ? { opacity: 1, y: 0 } : {}, transition: { duration: 0.9, delay: d, ease: EASE } });
+  return (
+    <section id="hero" className="relative pt-28 sm:pt-32">
+      <div className="wrap">
+        <motion.div {...fade(0.1)} className="grid gap-3 border-b border-[var(--border)] pb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] sm:grid-cols-3">
+          <span>Portfolio — ©2026</span>
+          <span className="sm:text-center">Hyderabad, IN · 17.38°N 78.48°E</span>
+          <span className="flex items-center gap-2 sm:justify-end">
+            <span className="pulse-dot h-2 w-2 rounded-full bg-[var(--emerald)]" /> Open to SWE & AI internships
+          </span>
+        </motion.div>
+
+        <h1 className="font-display mt-10 text-[clamp(3.4rem,13.2vw,14rem)] leading-[0.86] font-medium tracking-[-0.06em] sm:mt-14">
+          <span className="flex items-start gap-[0.12em]">
+            <em className="mt-[0.18em] font-serif text-[0.28em] font-normal leading-none tracking-normal text-[var(--muted)] italic">
+              <BlurText text="Venkata" by="char" play={ready} delay={0.2} />
+            </em>
+            <BlurText text="Vahini" by="char" play={ready} delay={0.25} stagger={0.05} />
+          </span>
+          <span className="block">
+            <BlurText text="Chilukamarri" by="char" play={ready} delay={0.45} stagger={0.04} />
+          </span>
+        </h1>
+
+        <div className="mt-10 grid gap-10 lg:mt-14 lg:grid-cols-[1.25fr_1fr] lg:items-end">
+          <motion.div {...fade(0.9)}>
+            <p className="max-w-xl text-lg leading-relaxed text-[var(--muted)] sm:text-xl">
+              Final-year CSE at KMIT building AI systems that are <em className="font-serif text-[1.15em] text-[var(--ink)] italic">verified, not trusted</em> —
+              agents that ship their own test suites, payment agents fenced by deterministic policy, and ledgers proven with property-based tests.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Magnetic><FillButton onClick={() => scrollToId("work")}>See the work <span aria-hidden="true">↓</span></FillButton></Magnetic>
+              <Magnetic><FillButton variant="ghost" onClick={() => scrollToId("contact")}>Get in touch</FillButton></Magnetic>
+            </div>
+            <div className="mt-6"><Ticker /></div>
+          </motion.div>
+          <ul className="font-display text-right text-[clamp(1.2rem,2.2vw,1.9rem)] leading-[1.15] font-medium tracking-[-0.03em] uppercase">
+            {ROLES.map((r, i) => (
+              <li key={r} className="overflow-hidden">
+                <motion.span className="block" initial={{ y: "110%" }} animate={ready ? { y: 0 } : {}} transition={{ duration: 1, delay: 0.85 + i * 0.08, ease: EASE }}>
+                  {r}
+                </motion.span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <HeroFrame />
+    </section>
+  );
+}
+
+/* The tilted panel that flattens and widens as you scroll into it. */
+function HeroFrame() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "start 0.12"] });
+  const scale = useTransform(scrollYProgress, [0, 1], [0.84, 1]);
+  const rotateX = useTransform(scrollYProgress, [0, 1], [26, 0]);
+  const radius = useTransform(scrollYProgress, [0, 1], [48, 24]);
+  const y = useTransform(scrollYProgress, [0, 1], [60, 0]);
+
+  return (
+    <div ref={ref} className="wrap mt-16 sm:mt-24" style={{ perspective: 1400 }}>
+      <motion.div
+        style={{ scale, rotateX, borderRadius: radius, y, transformOrigin: "50% 100%" }}
+        className="aurora relative flex min-h-[78vh] flex-col justify-between overflow-hidden border border-[var(--border-hi)] p-5 sm:p-8 lg:p-10"
+      >
+        <NeuralField className="opacity-70" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--ink)]/80">
+          <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--ink)]" /> Live index</span>
+          <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1 backdrop-blur">Now building — MORPH v0.6 · MCP policy layer</span>
+        </div>
+
+        <div className="relative my-12 text-center">
+          <div className="font-serif text-[clamp(2.4rem,7vw,6.5rem)] leading-[0.95] italic">
+            <BlurText text="Verified," /> <span className="text-[var(--ink)]/50"><BlurText text="not trusted." delay={0.2} /></span>
+          </div>
+          <Reveal delay={0.3} className="mx-auto mt-5 max-w-md text-sm text-[var(--ink)]/70">
+            Every agent I build proposes; deterministic code decides. The numbers below come straight from the repos and the resume.
+          </Reveal>
+        </div>
+
+        <div className="relative grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 lg:grid-cols-4">
+          {HIGHLIGHTS.map(h => (
+            <div key={h.label} className="bg-[#0d0d12]/80 p-4 backdrop-blur-xl sm:p-6">
+              <Counter to={h.n} dec={h.dec} prefix={h.prefix} suffix={h.suffix} className="font-display block text-[clamp(2rem,4.4vw,3.8rem)] leading-none font-medium tracking-[-0.05em] tabular-nums" />
+              <div className="mt-3 text-sm text-[var(--ink)]">{h.label}</div>
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted)]">{h.sub}</div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }
 
-function Hero({ onOpenPalette }) {
-  const goTo = id => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+function StackMarquee() {
+  const rows = [
+    STACK.slice(0, 3).flatMap(s => s.items),
+    STACK.slice(3).flatMap(s => s.items),
+  ];
   return (
-    <section id="hero" className="relative flex min-h-screen items-center px-6 pt-28 pb-16">
-      <NeuralField className="[mask-image:linear-gradient(to_bottom,black_55%,transparent)]" />
-      <div className="relative mx-auto w-full max-w-7xl">
-        <Reveal>
-          <Ticker />
-        </Reveal>
-        <Reveal delay={0.08}>
-          <h1 className="font-display mt-8 text-[15vw] leading-[0.92] font-bold tracking-tight sm:text-[9vw] lg:text-[6.4rem]">
-            <Scramble text="Vahini" /><br />
-            <span className="bg-gradient-to-r from-[var(--violet)] via-[var(--indigo)] to-[var(--cyan)] bg-clip-text text-transparent">
-              <Scramble text="Chilukamarri" offset={180} />
+    <div className="marquee-mask relative mt-24 space-y-4 overflow-hidden py-2" aria-label="Tech stack">
+      {rows.map((items, r) => (
+        <div key={r} className={`flex w-max gap-10 ${r === 0 ? "animate-marquee" : "animate-marquee-reverse"}`}>
+          {[...items, ...items].map((it, i) => (
+            <span key={i} aria-hidden={i >= items.length} className={`font-display flex items-center gap-10 text-[clamp(1.6rem,3.4vw,3rem)] font-medium whitespace-nowrap tracking-[-0.04em] ${r === 0 ? "text-[var(--ink)]" : "text-outline"}`}>
+              {it}
+              <span className="font-serif text-[0.7em] text-[var(--accent)]">✦</span>
             </span>
-          </h1>
-        </Reveal>
-        <Reveal delay={0.16} className="mt-8 grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end">
-          <div>
-            <div className="flex flex-wrap gap-2 font-mono text-xs uppercase tracking-wider text-[var(--muted)]">
-              <span className="rounded-full border border-[var(--border)] px-3 py-1">AI / ML Engineer</span>
-              <span className="rounded-full border border-[var(--border)] px-3 py-1">Full-Stack Developer</span>
-              <span className="rounded-full border border-[var(--violet)]/30 bg-[var(--violet)]/10 px-3 py-1 text-[var(--violet)]">Open to Internships</span>
-            </div>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--muted)]">
-              4th-year CS student at KMIT building the parts of AI systems that have to actually work in production —
-              evaluation pipelines, retrieval backends, distributed observability, and the full-stack scaffolding around them.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Magnetic>
-                <button onClick={() => goTo("work")} className="rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--indigo)] px-6 py-3 font-mono text-xs uppercase tracking-wider text-white shadow-lg shadow-[var(--indigo)]/25">
-                  See the Work →
-                </button>
-              </Magnetic>
-              <Magnetic>
-                <button onClick={() => goTo("contact")} className="rounded-full border border-[var(--border-hi)] bg-[var(--bg)]/40 px-6 py-3 font-mono text-xs uppercase tracking-wider text-[var(--ink)] backdrop-blur transition-colors hover:border-[var(--violet)]/50 hover:text-[var(--violet)]">
-                  Get in Touch
-                </button>
-              </Magnetic>
-              <button onClick={onOpenPalette} className="hidden items-center gap-2 px-2 font-mono text-[11px] text-[var(--muted-2)] transition-colors hover:text-[var(--muted)] md:inline-flex">
-                or press <kbd className="rounded border border-[var(--border-hi)] px-1.5 py-0.5 text-[var(--muted)]">⌘K</kbd> to jump anywhere
-              </button>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[["9.12", "CGPA"], ["7", "Shipped Builds"], ["2027", "Graduating"], ["1", "Mentorship, Salesforce"]].map(([n, l]) => (
-              <div key={l} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 backdrop-blur-xl">
-                <div className="font-display text-2xl font-bold text-[var(--ink)]">{n}</div>
-                <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[var(--muted)]">{l}</div>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-      </div>
-    </section>
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -540,173 +481,343 @@ function Hero({ onOpenPalette }) {
    ══════════════════════════════════════════════════════════ */
 function About() {
   return (
-    <section id="about" className="relative px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <Reveal><Eyebrow num="01">About</Eyebrow></Reveal>
-        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">The person behind the commits</h2></Reveal>
+    <section id="about" className="relative py-28 sm:py-40">
+      <div className="wrap">
+        <SectionHead num="01" label="About" aside="The person behind the commits" a="The person" b="behind" c="the commits" />
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
-          <Reveal delay={0.1} className="space-y-5 text-lg leading-relaxed text-[var(--muted)]">
-            <p>I'm a <b className="text-[var(--ink)]">4th-year Computer Science student at KMIT, Hyderabad</b> (CGPA 9.12), currently mentored through the <b className="text-[var(--ink)]">Salesforce Mentorship Program</b> on a microservice health and API performance orchestrator.</p>
-            <p>Most of what I build sits at the intersection of <b className="text-[var(--ink)]">LLM systems, distributed observability, and full-stack engineering</b> — dependency graphs discovered from trace spans, evaluation pipelines that judge other models, and the dashboards that make all of it usable.</p>
-            <p>Outside of coursework, I'm on a structured prep track across DSA, system design, and AI engineering depth — and I contribute remotely to <b className="text-[var(--ink)]">Rewriting the Code</b>, a nonprofit supporting women in tech.</p>
-            <div className="flex flex-wrap gap-2 pt-2">
-              {["KMIT · CGPA 9.12", "Hyderabad, India", "Expected 2027", "Salesforce Mentee"].map(t => (
-                <span key={t} className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-mono text-[11px] text-[var(--muted)]">{t}</span>
+        <ScrubText
+          className="font-display mt-16 max-w-6xl text-[clamp(1.6rem,3.6vw,3.3rem)] leading-[1.12] font-medium tracking-[-0.035em]"
+          accentWords={["verified", "trusted", "proven"]}
+          text="I build AI systems that are verified, not trusted — an agent that writes integration code and ships its own test suites, a payment-recovery agent fenced by a deterministic policy layer, and a Java ledger proven with property-based tests and fault injection."
+        />
+
+        <div className="mt-20 grid gap-10 lg:grid-cols-[1.25fr_1fr]">
+          <Reveal className="space-y-5 text-lg leading-relaxed text-[var(--muted)]">
+            <p>I'm a <b className="font-medium text-[var(--ink)]">final-year Computer Science student at KMIT, Hyderabad</b> (CGPA 9.12), mentored through the <b className="font-medium text-[var(--ink)]">Salesforce Mentorship Program</b> on a microservice health and API performance orchestrator.</p>
+            <p>Most of what I build sits at the intersection of <b className="font-medium text-[var(--ink)]">LLM agents, testing, and distributed systems</b> — dependency graphs discovered from trace spans, evaluation pipelines that judge other models, and the guardrails that keep agents honest.</p>
+            <p>I'm a <b className="font-medium text-[var(--ink)]">co-author of AgentShield AI</b>, an accepted paper on multi-agent LLMs for cloud infrastructure security, and I contribute remotely to <b className="font-medium text-[var(--ink)]">Rewriting the Code</b>, a nonprofit supporting women in tech.</p>
+            <div className="flex flex-wrap gap-2 pt-3">
+              {["KMIT · CGPA 9.12", "Hyderabad, India", "Graduating 2027", "Salesforce Mentee", "Published co-author"].map(t => (
+                <span key={t} className="rounded-full border border-[var(--border)] px-3 py-1.5 font-mono text-[11px] text-[var(--muted)]">{t}</span>
               ))}
             </div>
           </Reveal>
 
-          <Reveal delay={0.16}>
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 backdrop-blur-xl">
-              <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[var(--violet)] to-[var(--indigo)] font-display font-bold text-white">VC</div>
-                <span className="rounded-full bg-[var(--cyan)]/10 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[var(--cyan)]">Verified</span>
+          <Reveal delay={0.1}>
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7">
+              <div className="flex items-center justify-between border-b border-[var(--border)] pb-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--ink)] font-serif text-2xl text-[var(--bg)] italic">v</div>
+                <span className="flex items-center gap-2 rounded-full border border-[var(--emerald)]/30 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[var(--emerald)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--emerald)]" />Verified</span>
               </div>
-              {[["Subject", "Vahini Chilukamarri"], ["Role", "AI / ML Engineer"], ["Base", "Hyderabad, India"], ["Institution", "KMIT"], ["Focus", "LLM Systems · Distributed Systems"], ["Status", "Open to internships"]].map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between border-b border-[var(--border)] py-3 font-mono text-xs last:border-0">
-                  <span className="text-[var(--muted-2)] uppercase tracking-wider">{k}</span>
-                  <span className="text-[var(--ink)]">{v}</span>
+              {[["Subject", "Venkata Vahini Chilukamarri"], ["Role", "Software & AI Engineer"], ["Base", "Hyderabad, India"], ["Institution", "KMIT · B.Tech CSE"], ["Focus", "LLM Agents · Testing · Distributed Systems"], ["Research", "AgentShield AI — accepted"], ["Status", "Open to internships"]].map(([k, v]) => (
+                <div key={k} className="flex items-center justify-between gap-4 border-b border-[var(--border)] py-3.5 font-mono text-xs last:border-0">
+                  <span className="shrink-0 tracking-wider text-[var(--muted-2)] uppercase">{k}</span>
+                  <span className="text-right text-[var(--ink)]">{v}</span>
                 </div>
               ))}
             </div>
           </Reveal>
         </div>
 
-        <Reveal delay={0.2} className="mt-6 grid gap-4 sm:grid-cols-3">
+        {/* Education */}
+        <div className="mt-24">
+          <Reveal className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Education</Reveal>
+          <div className="mt-6 border-t border-[var(--border)]">
+            {EDUCATION.map((e, i) => (
+              <Reveal key={e.school} delay={i * 0.08} className="grid gap-3 border-b border-[var(--border)] py-7 md:grid-cols-[160px_1.4fr_1fr] md:items-baseline">
+                <span className="font-mono text-xs text-[var(--muted)]">{e.when}</span>
+                <div>
+                  <div className="font-display text-2xl font-medium tracking-[-0.03em] sm:text-3xl">{e.school}</div>
+                  <div className="mt-1 text-[var(--muted)]">{e.degree} · {e.where}</div>
+                </div>
+                <div className="font-serif text-2xl text-[var(--accent)] italic md:text-right">{e.score}</div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-16 grid gap-4 sm:grid-cols-3">
           {[
-            { tag: "Resume", h: "Read the full file", d: "Education, experience, and every project — updated with the latest work.", go: "Open PDF ↗", href: LINKS.resume },
-            { tag: "GitHub", h: "vahinichilukamarri", d: "Every repo referenced on this page lives here, plus ongoing DSA practice.", go: "Visit profile ↗", href: LINKS.github },
-            { tag: "Portfolio", h: "vahini-dev.vercel.app", d: "This site, live — always reflects the current build.", go: "Open site ↗", href: LINKS.portfolio },
-          ].map(f => (
-            <a key={f.tag} href={f.href} target="_blank" rel="noreferrer" className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 backdrop-blur-xl transition-all hover:border-[var(--violet)]/40 hover:bg-[var(--surface-hi)]">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-[var(--violet)]">{f.tag}</div>
-              <div className="font-display mt-2 text-lg font-bold">{f.h}</div>
-              <div className="mt-2 text-sm text-[var(--muted)]">{f.d}</div>
-              <div className="mt-4 font-mono text-xs text-[var(--cyan)] transition-transform group-hover:translate-x-1">{f.go}</div>
-            </a>
+            { tag: "Resume", h: "Read the full file", d: "Education, experience, research, and every project — updated with the latest work.", go: "Open PDF", href: LINKS.resume },
+            { tag: "GitHub", h: "vahinichilukamarri", d: "Every repo referenced on this page lives here, plus ongoing DSA practice.", go: "Visit profile", href: LINKS.github },
+            { tag: "Portfolio", h: "vahini-dev.vercel.app", d: "This site, live — always reflects the current build.", go: "Open site", href: LINKS.portfolio },
+          ].map((f, i) => (
+            <Reveal key={f.tag} delay={i * 0.08}>
+              <a href={f.href} target="_blank" rel="noreferrer" data-cursor="Open" className="group flex h-full flex-col rounded-3xl border border-[var(--border)] p-6 transition-colors duration-500 hover:border-[var(--border-hi)] hover:bg-[var(--surface-hi)]">
+                <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">
+                  {f.tag}
+                  <Arrow className="text-base transition-transform duration-500 group-hover:rotate-45" />
+                </div>
+                <div className="font-display mt-10 text-xl font-medium tracking-[-0.02em]">{f.h}</div>
+                <div className="mt-2 text-sm text-[var(--muted)]">{f.d}</div>
+                <div className="mt-auto pt-6 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--accent)]">{f.go}</div>
+              </a>
+            </Reveal>
           ))}
-        </Reveal>
+        </div>
       </div>
     </section>
   );
 }
 
 /* ══════════════════════════════════════════════════════════
-   EXPERIENCE
+   EXPERIENCE & RESEARCH
    ══════════════════════════════════════════════════════════ */
+const TIMELINE = [
+  { when: EXPERIENCE.when, tag: "Experience", color: "violet", title: EXPERIENCE.org, role: EXPERIENCE.role, where: EXPERIENCE.where, points: EXPERIENCE.points, stack: EXPERIENCE.stack, href: EXPERIENCE.gh, cta: "View source" },
+  { when: "To appear Jan 2027", tag: "Publication", color: "amber", title: PUBLICATION.title, role: `${PUBLICATION.kind} — multi-agent LLMs for cloud infrastructure security`, where: PUBLICATION.status, points: PUBLICATION.points, stack: PUBLICATION.stack, href: PUBLICATION.gh, cta: "Read paper" },
+  { when: "2026", tag: "Award", color: "rose", title: "Centific Hackathon 2.0 — Winner", role: "Awarded an AI Engineer internship offer", where: "Hackathon", points: ["Built an AI recruiter avatar platform in 2 weeks, winning the hackathon and an AI Engineer internship offer."], stack: [] },
+  { when: "June 2026 – Present", tag: "Community", color: "emerald", title: "Rewriting the Code", role: "Contributor — nonprofit supporting women in tech", where: "Remote", points: [], stack: [] },
+];
+
 function Experience() {
   return (
-    <section id="experience" className="relative px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <Reveal><Eyebrow num="02">Experience</Eyebrow></Reveal>
-        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Mentored, shipped, live</h2></Reveal>
+    <section id="experience" className="relative py-28 sm:py-40">
+      <div className="wrap">
+        <SectionHead num="02" label="Experience" aside="Mentored · published · awarded" a="Mentored," b="published," c="shipped" />
+        <div className="mt-16 border-t border-[var(--border)]">
+          {TIMELINE.map((t, i) => (
+            <Reveal key={t.title} delay={i * 0.05}>
+              <article className="group relative grid gap-6 border-b border-[var(--border)] py-10 lg:grid-cols-[230px_1fr_170px]" style={{ "--accent-c": accent(t.color) }}>
+                <span className="absolute top-[-1px] left-0 h-px w-0 bg-[var(--accent-c)] transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:w-full" />
+                <div className="space-y-3">
+                  <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: accent(t.color), borderColor: `color-mix(in srgb, ${accent(t.color)} 35%, transparent)` }}>
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: accent(t.color) }} />{t.tag}
+                  </span>
+                  <div className="font-mono text-xs text-[var(--muted)]">{t.when}</div>
+                </div>
+                <div>
+                  <h3 className="font-display text-[clamp(1.7rem,3.2vw,2.8rem)] leading-[1.02] font-medium tracking-[-0.04em]">{t.title}</h3>
+                  <div className="mt-2 text-[var(--muted)]">{t.role} <span className="text-[var(--muted-2)]">· {t.where}</span></div>
+                  {t.points.length > 0 && (
+                    <ul className="mt-6 max-w-3xl space-y-3">
+                      {t.points.map(p => (
+                        <li key={p} className="flex gap-4 text-[15px] leading-relaxed text-[var(--muted)]">
+                          <span className="mt-[0.7em] h-px w-4 shrink-0" style={{ background: accent(t.color) }} />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {t.stack.length > 0 && (
+                    <div className="mt-6 flex flex-wrap gap-2">
+                      {t.stack.map(s => <span key={s} className="rounded-full border border-[var(--border)] px-2.5 py-1 font-mono text-[10px] text-[var(--muted)]">{s}</span>)}
+                    </div>
+                  )}
+                </div>
+                <div className="lg:text-right">
+                  {t.href ? (
+                    <a href={t.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--ink)] transition-colors hover:text-[var(--accent-c)]">{t.cta} <Arrow /></a>
+                  ) : t.tag === "Publication" ? (
+                    <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted-2)]">{t.where}</span>
+                  ) : null}
+                </div>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
-        <Reveal delay={0.12} className="mt-12 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] backdrop-blur-xl">
-          <div className="flex flex-col justify-between gap-4 border-b border-[var(--border)] p-8 sm:flex-row sm:items-center">
-            <div>
-              <div className="font-mono text-xs uppercase tracking-wider text-[var(--violet)]">{EXPERIENCE.when} · {EXPERIENCE.where}</div>
-              <div className="font-display mt-2 text-2xl font-bold">{EXPERIENCE.org}</div>
-              <div className="mt-1 text-[var(--muted)]">{EXPERIENCE.role}</div>
+/* ══════════════════════════════════════════════════════════
+   WORK — sticky stacking flagships + full index
+   ══════════════════════════════════════════════════════════ */
+function ProjectLinks({ p }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {p.gh ? <FillButton href={p.gh} data-cursor="Code">Source <Arrow /></FillButton> : <span className="rounded-full border border-[var(--border)] px-5 py-3 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">Link coming soon</span>}
+      {p.live && <FillButton variant="ghost" href={p.live} data-cursor="Live">Live demo <Arrow /></FillButton>}
+    </div>
+  );
+}
+
+function FlagshipCard({ p, i, n, progress, desktop }) {
+  const target = 1 - (n - 1 - i) * 0.045;
+  const scale = useTransform(progress, [i / n, 1], [1, target]);
+  const dim = useTransform(progress, [i / n, 1], [0, (n - 1 - i) * 0.28]);
+  const c = accent(p.accent);
+  const ref = useRef(null);
+  const onMove = e => {
+    const r = ref.current.getBoundingClientRect();
+    ref.current.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    ref.current.style.setProperty("--my", `${e.clientY - r.top}px`);
+  };
+
+  return (
+    <div className={desktop ? "sticky top-0 flex h-screen items-center" : "py-3"}>
+      <motion.article
+        ref={ref}
+        onMouseMove={onMove}
+        style={desktop ? { scale, top: `${i * 26}px`, "--accent-c": c } : { "--accent-c": c }}
+        className="group relative w-full origin-top overflow-hidden rounded-[2rem] border border-[var(--border-hi)] bg-[#0f0f11] lg:h-[min(80vh,720px)]"
+      >
+        <div className="spotlight pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="relative grid h-full lg:grid-cols-[1.15fr_1fr]">
+          <div className="flex flex-col p-6 sm:p-10">
+            <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">
+              <span style={{ color: c }}>{p.no}</span>
+              <span className="h-px w-8 bg-[var(--border-hi)]" />
+              Flagship · {p.year}
+              {p.isNew && <span className="rounded-full px-2 py-0.5 text-[9px] text-[var(--bg)]" style={{ background: c }}>New</span>}
             </div>
-            <a href={EXPERIENCE.gh} target="_blank" rel="noreferrer" className="shrink-0 rounded-full border border-[var(--border-hi)] px-5 py-2.5 font-mono text-xs uppercase tracking-wider transition-colors hover:border-[var(--violet)]/50 hover:text-[var(--violet)]">
-              View Source ↗
-            </a>
-          </div>
-          <div className="grid gap-6 p-8 lg:grid-cols-[1.5fr_1fr]">
-            <ul className="space-y-4">
-              {EXPERIENCE.points.map(p => (
-                <li key={p} className="flex gap-3 text-[var(--muted)]">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--violet)]" />
-                  <span>{p}</span>
+            <h3 className="font-display mt-6 text-[clamp(2.8rem,6vw,5.6rem)] leading-[0.9] font-medium tracking-[-0.055em]">{p.title}</h3>
+            <p className="mt-3 font-serif text-xl italic" style={{ color: c }}>{p.sub}</p>
+            <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-[var(--muted)]">{p.desc}</p>
+            <ul className="mt-6 space-y-2.5">
+              {p.points.slice(0, 3).map(pt => (
+                <li key={pt} className="flex gap-3 text-sm leading-relaxed text-[var(--muted)]">
+                  <span className="mt-[0.65em] h-px w-3 shrink-0" style={{ background: c }} />
+                  <span>{pt}</span>
                 </li>
               ))}
             </ul>
-            <div className="flex flex-wrap content-start gap-2">
-              {EXPERIENCE.stack.map(s => (
-                <span key={s} className="rounded-full border border-[var(--violet)]/30 bg-[var(--violet)]/10 px-3 py-1.5 font-mono text-[11px] text-[var(--violet)]">{s}</span>
-              ))}
+            <div className="mt-8 lg:mt-auto lg:pt-8"><ProjectLinks p={p} /></div>
+          </div>
+
+          <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden border-t border-[var(--border)] p-6 sm:p-10 lg:border-t-0 lg:border-l">
+            <div className="absolute inset-0 opacity-90" style={{ background: `radial-gradient(80% 70% at 70% 30%, color-mix(in srgb, ${c} 32%, transparent), transparent 65%), radial-gradient(60% 60% at 10% 100%, color-mix(in srgb, ${c} 16%, transparent), transparent 70%)` }} />
+            <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "linear-gradient(var(--ink) 1px, transparent 1px), linear-gradient(90deg, var(--ink) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+            <div className="relative font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--ink)]/70">Key result</div>
+            <div className="relative">
+              <div className="font-display text-[clamp(3.6rem,8vw,7.5rem)] leading-[0.85] font-medium tracking-[-0.06em]">{p.metric.n}</div>
+              <div className="mt-3 max-w-[16rem] font-serif text-xl text-[var(--ink)]/80 italic">{p.metric.l}</div>
+            </div>
+            <div className="relative flex flex-wrap gap-1.5">
+              {p.stack.map(s => <span key={s} className="rounded-full border border-white/15 bg-black/25 px-2.5 py-1 font-mono text-[10px] text-[var(--ink)]/85 backdrop-blur">{s}</span>)}
             </div>
           </div>
-        </Reveal>
-      </div>
-    </section>
+        </div>
+        {desktop && <motion.div style={{ opacity: dim }} className="pointer-events-none absolute inset-0 bg-black" />}
+      </motion.article>
+    </div>
   );
 }
 
-/* ══════════════════════════════════════════════════════════
-   WORK / PROJECTS
-   ══════════════════════════════════════════════════════════ */
-function ProjectCard({ p, i }) {
-  const a = ACCENT[p.accent];
+function FlagshipStack() {
+  const flagships = PROJECTS.filter(p => p.featured);
   const ref = useRef(null);
-  const onMove = e => {
-    const el = ref.current;
-    const r = el.getBoundingClientRect();
-    const x = e.clientX - r.left, y = e.clientY - r.top;
-    el.style.setProperty("--mx", `${x}px`);
-    el.style.setProperty("--my", `${y}px`);
-    el.style.transform = `perspective(1100px) rotateX(${(0.5 - y / r.height) * 5}deg) rotateY(${(x / r.width - 0.5) * 5}deg) translateY(-4px)`;
-  };
-  const onLeave = () => { ref.current.style.transform = ""; };
+  const desktop = useIsDesktop();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   return (
-    <Reveal delay={(i % 3) * 0.06} className="h-full">
-      <div
-        ref={ref}
-        onMouseMove={onMove}
-        onMouseLeave={onLeave}
-        style={{ "--accent": `var(--${p.accent})` }}
-        className={`group relative h-full overflow-hidden rounded-3xl border ${a.border} bg-[var(--surface)] p-8 backdrop-blur-xl transition-[transform,background-color,box-shadow] duration-300 ease-out hover:bg-[var(--surface-hi)] hover:shadow-2xl hover:shadow-black/40 ${p.featured ? `ring-1 ${a.ring} shadow-lg shadow-black/20` : ""}`}
+    <div ref={ref} className="relative mt-10">
+      {flagships.map((p, i) => <FlagshipCard key={p.no} p={p} i={i} n={flagships.length} progress={scrollYProgress} desktop={desktop} />)}
+    </div>
+  );
+}
+
+function IndexRow({ p, open, onToggle, onHover }) {
+  const c = accent(p.accent);
+  return (
+    <li className="border-b border-[var(--border)]" style={{ "--accent-c": c }}>
+      <button
+        onClick={onToggle}
+        onMouseEnter={() => onHover(p)}
+        onMouseLeave={() => onHover(null)}
+        aria-expanded={open}
+        data-cursor={open ? "Close" : "Open"}
+        className="group relative grid w-full grid-cols-[2.5rem_1fr_auto] items-center gap-4 overflow-hidden py-6 text-left sm:grid-cols-[3.5rem_1fr_auto_auto] sm:py-8"
       >
-        <div className="spotlight pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        <div className={`absolute -right-16 -top-16 h-40 w-40 rounded-full ${a.bg} blur-3xl`} />
-        <div className="relative flex items-start justify-between">
-          <span className={`font-mono text-xs ${a.text}`}>{p.no}</span>
-          <div className="flex items-center gap-2">
-            {p.featured && (
-              <span className={`rounded-full border ${a.border} ${a.bg} px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${a.text}`}>Flagship</span>
-            )}
-            <span className={`h-2 w-2 rounded-full ${a.dot}`} />
-          </div>
-        </div>
-        <h3 className="font-display relative mt-4 text-2xl font-bold">{p.title}</h3>
-        <p className={`relative mt-1 font-mono text-xs ${a.text}`}>{p.sub}</p>
-        <p className="relative mt-4 text-sm leading-relaxed text-[var(--muted)]">{p.desc}</p>
-        <ul className="relative mt-4 space-y-2">
-          {p.points.map(pt => (
-            <li key={pt} className="flex gap-2 text-sm text-[var(--muted)]">
-              <span className={`mt-1.5 h-1 w-1 shrink-0 rounded-full ${a.dot}`} />
-              <span>{pt}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="relative mt-6 flex flex-wrap gap-2 border-t border-[var(--border)] pt-5">
-          {p.stack.map(s => <span key={s} className="rounded-full border border-[var(--border)] px-2.5 py-1 font-mono text-[10px] text-[var(--muted)]">{s}</span>)}
-        </div>
-        <div className="relative mt-5 flex items-center gap-5">
-          <a href={p.gh} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1 font-mono text-xs ${a.text} transition-transform hover:translate-x-1`}>
-            View source ↗
-          </a>
-          {p.live && (
-            <a href={p.live} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-xs text-[var(--muted)] transition-transform hover:translate-x-1 hover:text-[var(--ink)]">
-              Live demo ↗
-            </a>
-          )}
-        </div>
+        <span className="absolute inset-0 origin-bottom scale-y-0 bg-[var(--surface-hi)] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-y-100" />
+        <span className="relative font-mono text-xs text-[var(--muted-2)]">{p.no}.</span>
+        <span className="relative min-w-0">
+          <span className="font-display flex items-center gap-3 text-[clamp(1.6rem,4.2vw,3.6rem)] leading-none font-medium tracking-[-0.045em] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-x-3">
+            <span className="truncate">{p.title}</span>
+            {p.isNew && <span className="shrink-0 rounded-full px-2 py-0.5 font-mono text-[9px] tracking-[0.14em] text-[var(--bg)] uppercase" style={{ background: c }}>New</span>}
+          </span>
+          <span className="mt-2 block truncate text-sm text-[var(--muted)] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-x-3">{p.sub}</span>
+        </span>
+        <span className="relative hidden font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] sm:block">{p.stack.slice(0, 2).join(" · ")} — {p.year}</span>
+        <span className={`relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-hi)] text-lg transition-all duration-500 ${open ? "rotate-45 bg-[var(--ink)] text-[var(--bg)]" : "group-hover:bg-[var(--accent-c)] group-hover:text-[var(--bg)]"}`}>+</span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.6, ease: EASE }} className="overflow-hidden">
+            <div className="grid gap-8 pb-10 sm:pl-[4.5rem] lg:grid-cols-[1.3fr_1fr]">
+              <div>
+                <p className="max-w-2xl leading-relaxed text-[var(--muted)]">{p.desc}</p>
+                <ul className="mt-5 space-y-2.5">
+                  {p.points.map(pt => (
+                    <li key={pt} className="flex gap-3 text-sm leading-relaxed text-[var(--muted)]">
+                      <span className="mt-[0.65em] h-px w-3 shrink-0" style={{ background: c }} />
+                      <span>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-wrap gap-1.5">
+                  {p.stack.map(s => <span key={s} className="rounded-full border border-[var(--border)] px-2.5 py-1 font-mono text-[10px] text-[var(--muted)]">{s}</span>)}
+                </div>
+                <ProjectLinks p={p} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </li>
+  );
+}
+
+/* Floating preview that trails the cursor while hovering the index. */
+function IndexPreview({ project, x, y }) {
+  return (
+    <motion.div style={{ x, y }} className="pointer-events-none fixed top-0 left-0 z-[65] hidden lg:block">
+      <AnimatePresence>
+        {project && (
+          <motion.div
+            key={project.no}
+            initial={{ opacity: 0, scale: 0.6, rotate: -6, filter: "blur(10px)" }}
+            animate={{ opacity: 1, scale: 1, rotate: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 0.6, rotate: 6, filter: "blur(10px)" }}
+            transition={{ duration: 0.45, ease: EASE }}
+            className="relative -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-white/15 p-5"
+            style={{ width: 300, height: 200, background: `radial-gradient(90% 90% at 80% 10%, color-mix(in srgb, ${accent(project.accent)} 55%, #0d0d12), #0d0d12 75%)` }}
+          >
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/70">{project.no} — {project.year}</div>
+            <div className="font-display mt-10 text-4xl font-medium tracking-[-0.05em] text-white">{project.title}</div>
+            <div className="mt-2 truncate font-serif text-white/75 italic">{project.metric ? project.metric.l : project.stack.slice(0, 3).join(" · ")}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function ProjectIndex() {
+  const [open, setOpen] = useState(null);
+  const [hover, setHover] = useState(null);
+  const mx = useMotionValue(0), my = useMotionValue(0);
+  const x = useSpring(mx, { stiffness: 220, damping: 26 });
+  const y = useSpring(my, { stiffness: 220, damping: 26 });
+  const onMove = e => { mx.set(e.clientX + 170); my.set(e.clientY); };
+
+  return (
+    <div className="mt-32" onMouseMove={onMove}>
+      <div className="flex items-end justify-between gap-6">
+        <h3 className="font-display text-[clamp(2rem,4.5vw,3.8rem)] leading-none font-medium tracking-[-0.045em]">
+          The full <em className="font-serif font-normal text-[var(--accent)] italic">index</em>
+        </h3>
+        <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">({String(PROJECTS.length).padStart(2, "0")}) builds · tap to expand</span>
       </div>
-    </Reveal>
+      <ul className="mt-8 border-t border-[var(--border)]">
+        {PROJECTS.map(p => (
+          <IndexRow key={p.no} p={p} open={open === p.no} onToggle={() => setOpen(o => (o === p.no ? null : p.no))} onHover={v => setHover(open === p.no ? null : v)} />
+        ))}
+      </ul>
+      <IndexPreview project={hover} x={x} y={y} />
+    </div>
   );
 }
 
 function Work() {
   return (
-    <section id="work" className="relative px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <Reveal><Eyebrow num="03">Work</Eyebrow></Reveal>
-        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Seven builds, open for review</h2></Reveal>
-        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {PROJECTS.map((p, i) => <ProjectCard key={p.no} p={p} i={i} />)}
-        </div>
+    <section id="work" className="relative py-28 sm:py-40">
+      <div className="wrap">
+        <SectionHead num="03" label="Work" aside={`${PROJECTS.length} builds, open for review`} a="Selected" b="work," c="open for review" />
+        <FlagshipStack />
+        <ProjectIndex />
       </div>
     </section>
   );
@@ -717,26 +828,28 @@ function Work() {
    ══════════════════════════════════════════════════════════ */
 function Stack() {
   return (
-    <section id="stack" className="relative px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <Reveal><Eyebrow num="05">Stack</Eyebrow></Reveal>
-        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">What runs underneath</h2></Reveal>
-        <div className="mt-12 grid gap-5 lg:grid-cols-2">
-          {STACK.map((s, i) => {
-            const a = ACCENT[s.accent];
-            return (
-              <Reveal key={s.cat} delay={i * 0.05}>
-                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 backdrop-blur-xl">
-                  <div className={`font-mono text-xs uppercase tracking-wider ${a.text}`}>{s.cat}</div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {s.items.map(it => (
-                      <span key={it} className={`rounded-full border ${a.border} ${a.bg} px-3 py-1.5 text-sm ${a.text}`}>{it}</span>
-                    ))}
-                  </div>
+    <section id="stack" className="relative py-28 sm:py-40">
+      <div className="wrap">
+        <SectionHead num="05" label="Stack" aside="Tools I reach for" a="What runs" b="underneath" />
+        <div className="mt-16 border-t border-[var(--border)]">
+          {STACK.map((s, i) => (
+            <Reveal key={s.cat} delay={i * 0.04} className="grid gap-5 border-b border-[var(--border)] py-8 lg:grid-cols-[300px_1fr]">
+              <div className="flex items-baseline gap-4">
+                <span className="font-mono text-xs" style={{ color: accent(s.accent) }}>{String(i + 1).padStart(2, "0")}</span>
+                <div>
+                  <div className="font-display text-xl font-medium tracking-[-0.02em]">{s.cat}</div>
+                  <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted-2)]">{s.items.length} tools</div>
                 </div>
-              </Reveal>
-            );
-          })}
+              </div>
+              <div className="font-display flex flex-wrap gap-x-2 gap-y-1 text-[clamp(1.25rem,2.3vw,2rem)] leading-snug font-medium tracking-[-0.035em]" style={{ "--accent-c": accent(s.accent) }}>
+                {s.items.map((it, j) => (
+                  <span key={it} className="text-[var(--muted)] transition-colors duration-300 hover:text-[var(--accent-c)]">
+                    {it}{j < s.items.length - 1 && <span className="text-[var(--muted-2)]">,</span>}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
+          ))}
         </div>
       </div>
     </section>
@@ -748,12 +861,11 @@ function Stack() {
    ══════════════════════════════════════════════════════════ */
 function Network() {
   return (
-    <section id="network" className="relative overflow-hidden px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <Reveal><Eyebrow num="06">Network</Eyebrow></Reveal>
-        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">A hand from LinkedIn</h2></Reveal>
-        <Reveal delay={0.1}><p className="mt-4 max-w-2xl text-[var(--muted)]">Hackathons, launches, and certifications, as I posted them. Pick a card to read it.</p></Reveal>
-        <div className="mt-14">
+    <section id="network" className="relative overflow-hidden py-28 sm:py-40">
+      <div className="wrap">
+        <SectionHead num="06" label="Network" aside="As posted on LinkedIn" a="A hand" b="from" c="LinkedIn" />
+        <Reveal delay={0.1}><p className="mt-6 max-w-2xl text-lg text-[var(--muted)]">Hackathons, launches, and certifications, as I posted them. Pick a card to read it.</p></Reveal>
+        <div className="mt-16">
           <HandOfCards posts={LINKEDIN_POSTS} profileUrl={LINKS.linkedin} />
         </div>
       </div>
@@ -763,7 +875,6 @@ function Network() {
 
 /* ══════════════════════════════════════════════════════════
    TERMINAL — interactive, driven entirely by this page's own data
-   (this replaces the old static "GitHub" repo-list section)
    ══════════════════════════════════════════════════════════ */
 function Terminal() {
   const { run, repos } = useTerminalCommands();
@@ -816,39 +927,37 @@ function Terminal() {
     ["help", "list all commands"],
     ["ls", "list repositories"],
     ["whoami", "about vahini"],
+    ["cat morph", "the newest build"],
+    ["publications", "research"],
     ["stack", "tech stack"],
     ["cat resume", "resume link"],
-    [`open ${repos[1]?.slug || "eval-engine"}`, "open a repo"],
+    [`open ${repos[1]?.slug || "trace"}`, "open a repo"],
     ["experience", "salesforce mentorship"],
     ["contact", "get in touch"],
   ];
 
   return (
-    <section id="terminal" className="relative px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <Reveal><Eyebrow num="07">Terminal</Eyebrow></Reveal>
-        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Skip the scrolling — just ask</h2></Reveal>
-        <Reveal delay={0.1}><p className="mt-4 max-w-2xl text-[var(--muted)]">A live terminal — type a command yourself, or tap one from the cheat sheet. Everything it answers with comes straight from this page's own data, nothing fetched externally.</p></Reveal>
+    <section id="terminal" className="relative py-28 sm:py-40">
+      <div className="wrap">
+        <SectionHead num="07" label="Terminal" aside="Nothing fetched externally" a="Skip the scrolling —" b="just ask" />
+        <Reveal delay={0.1}><p className="mt-6 max-w-2xl text-lg text-[var(--muted)]">A live terminal — type a command yourself, or tap one from the cheat sheet. Everything it answers with comes straight from this page's own data.</p></Reveal>
 
-        <Reveal delay={0.14} className="mt-12 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-          <div
-            className="overflow-hidden rounded-2xl border border-[var(--border-hi)] bg-[#0a0a0f] shadow-2xl shadow-black/40"
-            onClick={() => inputRef.current?.focus()}
-          >
-            <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+        <Reveal delay={0.14} className="mt-14 grid gap-5 lg:grid-cols-[1.6fr_1fr]">
+          <div className="overflow-hidden rounded-3xl border border-[var(--border-hi)] bg-[#0c0c0e] shadow-2xl shadow-black/50" onClick={() => inputRef.current?.focus()}>
+            <div className="flex items-center gap-2 border-b border-[var(--border)] px-5 py-3.5">
               <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
               <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
               <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
               <span className="ml-3 font-mono text-[11px] text-[var(--muted-2)]">vahini@terminal:~</span>
             </div>
-            <div ref={scrollRef} className="h-[360px] overflow-y-auto p-6 font-mono text-[13px] leading-relaxed sm:p-8">
+            <div ref={scrollRef} data-lenis-prevent className="h-[380px] overflow-y-auto p-6 font-mono text-[13px] leading-relaxed sm:p-8">
               {lines.map((l, i) => (
                 <div key={i} className={l.t === "cmd" ? "text-[var(--ink)]" : l.t === "sys" ? "text-[var(--muted-2)]" : "whitespace-pre-wrap text-[var(--muted)]"}>
-                  {l.t === "cmd" ? <><span className="text-[var(--cyan)]">$</span> {l.v}</> : l.v}
+                  {l.t === "cmd" ? <><span className="text-[var(--accent)]">$</span> {l.v}</> : l.v}
                 </div>
               ))}
               <form onSubmit={onSubmit} className="mt-1 flex items-center gap-2">
-                <span className="text-[var(--cyan)]">$</span>
+                <span className="text-[var(--accent)]">$</span>
                 <input
                   ref={inputRef}
                   value={input}
@@ -860,27 +969,27 @@ function Terminal() {
                   className="flex-1 bg-transparent text-[var(--ink)] outline-none"
                   placeholder="type a command…"
                 />
-                <span className="animate-caret text-[var(--cyan)]">▍</span>
+                <span className="animate-caret text-[var(--accent)]">▍</span>
               </form>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 backdrop-blur-xl">
-            <div className="font-mono text-xs uppercase tracking-wider text-[var(--violet)]">Cheat sheet</div>
-            <div className="mt-4 space-y-2">
+          <div className="rounded-3xl border border-[var(--border)] p-6">
+            <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">Cheat sheet</div>
+            <div className="mt-4 space-y-1">
               {CHEATS.map(([c, d]) => (
                 <button
                   key={c}
-                  onClick={() => { exec(c); inputRef.current?.focus(); }}
-                  className="flex w-full items-center justify-between gap-3 rounded-lg border border-transparent px-3 py-2 text-left transition-colors hover:border-[var(--border)] hover:bg-[var(--surface-hi)]"
+                  onClick={() => { exec(c); inputRef.current?.focus({ preventScroll: true }); }}
+                  className="group flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-[var(--surface-hi)]"
                 >
-                  <span className="font-mono text-xs text-[var(--cyan)]">{c}</span>
+                  <span className="font-mono text-xs text-[var(--ink)] transition-colors group-hover:text-[var(--accent)]">{c}</span>
                   <span className="text-right text-[11px] text-[var(--muted-2)]">{d}</span>
                 </button>
               ))}
             </div>
-            <a href={LINKS.github} target="_blank" rel="noreferrer" className="mt-5 flex items-center justify-between border-t border-[var(--border)] pt-4 font-mono text-[11px] text-[var(--muted-2)] transition-colors hover:text-[var(--violet)]">
-              open real github profile ↗
+            <a href={LINKS.github} target="_blank" rel="noreferrer" className="mt-5 flex items-center justify-between border-t border-[var(--border)] pt-4 font-mono text-[11px] text-[var(--muted)] transition-colors hover:text-[var(--accent)]">
+              open real github profile <Arrow />
             </a>
           </div>
         </Reveal>
@@ -894,40 +1003,36 @@ function Terminal() {
    ══════════════════════════════════════════════════════════ */
 function Recognition() {
   return (
-    <section id="recognition" className="relative px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <Reveal><Eyebrow num="08">Recognition</Eyebrow></Reveal>
-        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Certified, and on record</h2></Reveal>
-
-        <div className="mt-12 grid gap-8 lg:grid-cols-2">
-          <Reveal delay={0.1}>
-            <div className="font-mono text-xs uppercase tracking-wider text-[var(--violet)]">Certifications</div>
-            <div className="mt-4 space-y-3">
+    <section id="recognition" className="relative py-28 sm:py-40">
+      <div className="wrap">
+        <SectionHead num="08" label="Recognition" aside="Certified, and on record" a="Certified," b="and" c="on record" />
+        <div className="mt-16 grid gap-14 lg:grid-cols-[1fr_1.6fr]">
+          <div>
+            <Reveal className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">Certifications</Reveal>
+            <div className="mt-5 border-t border-[var(--border)]">
               {CERTS.map((c, i) => (
-                <div key={c.t} className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 backdrop-blur-xl">
-                  <div className="font-display flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--violet)]/10 text-xs font-bold text-[var(--violet)]">{String(i + 1).padStart(2, "0")}</div>
+                <Reveal key={c.t} delay={i * 0.05} className="flex items-baseline gap-5 border-b border-[var(--border)] py-5">
+                  <span className="font-mono text-xs text-[var(--accent)]">{String(i + 1).padStart(2, "0")}</span>
                   <div>
-                    <div className="text-sm font-semibold text-[var(--ink)]">{c.t}</div>
-                    <div className="text-xs text-[var(--muted)]">{c.o}</div>
+                    <div className="font-display text-lg font-medium tracking-[-0.02em]">{c.t}</div>
+                    <div className="text-sm text-[var(--muted)]">{c.o}</div>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
-          </Reveal>
-          <Reveal delay={0.16}>
-            <div className="font-mono text-xs uppercase tracking-wider text-[var(--cyan)]">Achievements</div>
-            <div className="mt-4 space-y-3">
+          </div>
+          <div>
+            <Reveal className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">Achievements & activities</Reveal>
+            <div className="mt-5 border-t border-[var(--border)]">
               {ACHIEVEMENTS.map((a, i) => (
-                <div key={a.t} className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 backdrop-blur-xl">
-                  <div className="font-display flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--cyan)]/10 text-xs font-bold text-[var(--cyan)]">{String(i + 1).padStart(2, "0")}</div>
-                  <div>
-                    <div className="text-sm font-semibold text-[var(--ink)]">{a.t}</div>
-                    <div className="text-xs text-[var(--muted)]">{a.d}</div>
-                  </div>
-                </div>
+                <Reveal key={a.t} delay={i * 0.04} className="group grid grid-cols-[2.5rem_1fr] items-baseline gap-3 border-b border-[var(--border)] py-5 sm:grid-cols-[2.5rem_1fr_1.3fr]">
+                  <span className={`font-mono text-xs ${a.star ? "text-[var(--amber)]" : "text-[var(--muted-2)]"}`}>{a.star ? "★" : String(i + 1).padStart(2, "0")}</span>
+                  <div className="font-display text-lg font-medium tracking-[-0.02em] transition-transform duration-500 group-hover:translate-x-1.5">{a.t}</div>
+                  <div className="col-start-2 text-sm text-[var(--muted)] sm:col-start-auto">{a.d}</div>
+                </Reveal>
               ))}
             </div>
-          </Reveal>
+          </div>
         </div>
       </div>
     </section>
@@ -939,6 +1044,7 @@ function Recognition() {
    ══════════════════════════════════════════════════════════ */
 function Contact() {
   const [msg, setMsg] = useState({ text: "", type: "" });
+  const [copied, setCopied] = useState(false);
 
   const handleForm = e => {
     e.preventDefault();
@@ -951,36 +1057,65 @@ function Contact() {
     setTimeout(() => setMsg({ text: "", type: "" }), 5000);
   };
 
-  return (
-    <section id="contact" className="relative px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <Reveal><Eyebrow num="09">Contact</Eyebrow></Reveal>
-        <Reveal delay={0.06}><h2 className="font-display mt-4 text-4xl font-bold sm:text-5xl">Let's build something</h2></Reveal>
+  const copy = () => {
+    navigator.clipboard?.writeText(LINKS.email);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
 
-        <div className="mt-12 grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:items-center">
-          <Reveal delay={0.1} className="flex flex-col items-center gap-10 md:flex-row md:items-center md:justify-center lg:justify-start lg:gap-14">
-            <p className="max-w-xs text-lg text-[var(--muted)] text-center md:text-left">Currently looking for Software Engineering or AI/ML internship opportunities. If you'd like to work together, or just say hi — reach out.</p>
+  const field = "mt-2 w-full border-b border-[var(--border-hi)] bg-transparent py-3 text-base outline-none transition-colors placeholder:text-[var(--muted-2)] focus:border-[var(--accent)]";
+
+  return (
+    <section id="contact" className="relative py-28 sm:py-40">
+      <div className="wrap">
+        <div className="flex items-center gap-4 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+          <span><span className="text-[var(--accent)]">(09)</span> Contact</span>
+          <span className="h-px flex-1 bg-[var(--border-hi)]" />
+          <span className="flex items-center gap-2"><span className="pulse-dot h-2 w-2 rounded-full bg-[var(--emerald)]" /> Available</span>
+        </div>
+
+        <h2 className="font-display mt-12 text-[clamp(3.4rem,12vw,12.5rem)] leading-[0.86] font-medium tracking-[-0.065em]">
+          <LineMask>Let's build</LineMask>
+          <LineMask delay={0.1}><em className="font-serif font-normal tracking-[-0.03em] text-[var(--accent)] italic">something</em> real.</LineMask>
+        </h2>
+
+        <div className="mt-14 flex flex-wrap items-center gap-4">
+          <Magnetic strength={0.15}>
+            <a href={`mailto:${LINKS.email}`} data-cursor="Write" className="group font-display relative inline-block text-[clamp(1.4rem,4vw,3.2rem)] font-medium tracking-[-0.04em]">
+              {LINKS.email}
+              <span className="absolute -bottom-1 left-0 h-[2px] w-full origin-right scale-x-0 bg-[var(--accent)] transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:origin-left group-hover:scale-x-100" />
+            </a>
+          </Magnetic>
+          <button onClick={copy} className="rounded-full border border-[var(--border-hi)] px-4 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] transition-colors hover:text-[var(--ink)]">
+            {copied ? "Copied ✓" : "Copy"}
+          </button>
+        </div>
+
+        <div className="mt-20 grid gap-14 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+          <Reveal className="flex flex-col items-center gap-10 md:flex-row md:justify-start lg:gap-14">
+            <p className="max-w-xs text-center text-lg text-[var(--muted)] md:text-left">Currently looking for Software Engineering or AI/ML internship opportunities. If you'd like to work together, or just say hi — reach out.</p>
             <ContactWallet />
           </Reveal>
-          <Reveal delay={0.16}>
-            <form onSubmit={handleForm} className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 backdrop-blur-xl">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted-2)]">Name</label>
-                  <input name="fn" placeholder="Your name" className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 px-4 py-3 text-sm outline-none transition-colors focus:border-[var(--violet)]/50" />
-                </div>
-                <div>
-                  <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted-2)]">Email</label>
-                  <input name="fe" type="email" placeholder="your@email.com" className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 px-4 py-3 text-sm outline-none transition-colors focus:border-[var(--violet)]/50" />
-                </div>
+          <Reveal delay={0.12}>
+            <form onSubmit={handleForm} className="space-y-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 sm:p-9">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <label className="block font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">
+                  Name
+                  <input name="fn" placeholder="Your name" className={`${field} font-sans normal-case tracking-normal`} />
+                </label>
+                <label className="block font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">
+                  Email
+                  <input name="fe" type="email" placeholder="your@email.com" className={`${field} font-sans normal-case tracking-normal`} />
+                </label>
               </div>
-              <div>
-                <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted-2)]">Message</label>
-                <textarea name="fm" rows="5" placeholder="Tell me about your project or opportunity..." className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 px-4 py-3 text-sm outline-none transition-colors focus:border-[var(--violet)]/50" />
-              </div>
-              {msg.text && <div className={`font-mono text-xs ${msg.type === "ok" ? "text-[var(--cyan)]" : "text-[var(--amber)]"}`}>{msg.text}</div>}
-              <button type="submit" className="w-full rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--indigo)] py-3.5 font-mono text-xs uppercase tracking-wider text-white shadow-lg shadow-[var(--indigo)]/25 transition-transform hover:scale-[1.02]">
-                Send via Mail →
+              <label className="block font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">
+                Message
+                <textarea name="fm" rows="4" placeholder="Tell me about your project or opportunity..." className={`${field} resize-none font-sans normal-case tracking-normal`} />
+              </label>
+              {msg.text && <div className={`font-mono text-xs ${msg.type === "ok" ? "text-[var(--emerald)]" : "text-[var(--amber)]"}`}>{msg.text}</div>}
+              <button type="submit" className="group relative w-full overflow-hidden rounded-full bg-[var(--ink)] py-4 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--bg)]">
+                <span className="absolute inset-0 translate-y-[101%] rounded-full bg-[var(--accent)] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-y-0" />
+                <span className="relative">Send via mail →</span>
               </button>
             </form>
           </Reveal>
@@ -991,15 +1126,41 @@ function Contact() {
 }
 
 function Footer() {
+  const clock = useClock();
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end end"] });
+  const y = useTransform(scrollYProgress, [0, 1], ["40%", "0%"]);
   return (
-    <footer className="border-t border-[var(--border)] px-6 py-10">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
-        <div className="font-mono text-[11px] text-[var(--muted-2)]">© 2026 Vahini Chilukamarri · built with intent</div>
-        <div className="flex gap-6 font-mono text-[11px] uppercase tracking-wider text-[var(--muted)]">
-          <a href={LINKS.github} target="_blank" rel="noreferrer" className="transition-colors hover:text-[var(--violet)]">GitHub</a>
-          <a href={LINKS.linkedin} target="_blank" rel="noreferrer" className="transition-colors hover:text-[var(--violet)]">LinkedIn</a>
-          <a href={`mailto:${LINKS.email}`} className="transition-colors hover:text-[var(--violet)]">Email</a>
+    <footer ref={ref} className="relative overflow-hidden border-t border-[var(--border)] pt-14">
+      <div className="wrap grid gap-8 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <div className="text-[var(--muted-2)]">Local time</div>
+          <div className="mt-2 text-[var(--ink)]">Hyderabad · {clock} IST</div>
         </div>
+        <div>
+          <div className="text-[var(--muted-2)]">Socials</div>
+          <div className="mt-2 flex gap-5">
+            <a href={LINKS.github} target="_blank" rel="noreferrer" className="text-[var(--ink)] hover:text-[var(--accent)]">GitHub</a>
+            <a href={LINKS.linkedin} target="_blank" rel="noreferrer" className="text-[var(--ink)] hover:text-[var(--accent)]">LinkedIn</a>
+            <a href={`mailto:${LINKS.email}`} className="text-[var(--ink)] hover:text-[var(--accent)]">Email</a>
+          </div>
+        </div>
+        <div>
+          <div className="text-[var(--muted-2)]">Colophon</div>
+          <div className="mt-2 text-[var(--ink)]">Geist & Instrument Serif · React · Motion</div>
+        </div>
+        <div className="lg:text-right">
+          <button onClick={() => scrollToId("hero")} className="group inline-flex items-center gap-2 text-[var(--ink)] hover:text-[var(--accent)]">
+            Back to top <span className="transition-transform duration-500 group-hover:-translate-y-1">↑</span>
+          </button>
+        </div>
+      </div>
+      <motion.div style={{ y }} aria-hidden="true" className="font-display mt-10 text-center text-[24vw] leading-[0.78] font-medium tracking-[-0.07em] text-[var(--ink)] select-none">
+        Vahini<span className="text-[var(--accent)]">.</span>
+      </motion.div>
+      <div className="wrap flex justify-between pt-4 pb-6 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted-2)]">
+        <span>© 2026 Venkata Vahini Chilukamarri</span>
+        <span>Built with intent</span>
       </div>
     </footer>
   );
@@ -1007,11 +1168,10 @@ function Footer() {
 
 function usePaletteItems() {
   return useMemo(() => {
-    const goTo = id => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     const open = url => window.open(url, "_blank", "noopener");
     return [
-      ...NAV.map(n => ({ group: "Jump to", label: n.label, hint: n.num, icon: "§", action: () => goTo(n.id) })),
-      ...PROJECTS.map(p => ({ group: "Projects", label: `${p.title} — source`, hint: "github", icon: "{}", keywords: p.stack.join(" "), action: () => open(p.gh) })),
+      ...NAV.map(n => ({ group: "Jump to", label: n.label, hint: n.num, icon: "§", action: () => scrollToId(n.id) })),
+      ...PROJECTS.filter(p => p.gh).map(p => ({ group: "Projects", label: `${p.title} — source`, hint: "github", icon: "{}", keywords: p.stack.join(" "), action: () => open(p.gh) })),
       ...PROJECTS.filter(p => p.live).map(p => ({ group: "Projects", label: `${p.title} — live app`, hint: "vercel", icon: "▶", action: () => open(p.live) })),
       { group: "Links", label: "Resume", hint: "pdf", icon: "↗", action: () => open(LINKS.resume) },
       { group: "Links", label: "LinkedIn", hint: "profile", icon: "in", action: () => open(LINKS.linkedin) },
@@ -1022,9 +1182,21 @@ function usePaletteItems() {
   }, []);
 }
 
+function shouldPlayIntro() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+  try { return !sessionStorage.getItem("vc-intro"); } catch { return true; }
+}
+
 export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [intro, setIntro] = useState(shouldPlayIntro);
   const paletteItems = usePaletteItems();
+  useSmoothScroll();
+
+  const endIntro = useCallback(() => {
+    try { sessionStorage.setItem("vc-intro", "1"); } catch { /* storage unavailable — intro just replays */ }
+    setIntro(false);
+  }, []);
 
   useEffect(() => {
     const onKey = e => {
@@ -1038,23 +1210,27 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen">
+      <AnimatePresence>{intro && <Intro onDone={endIntro} />}</AnimatePresence>
+      <div className="grain" aria-hidden="true" />
       <Cursor />
       <ScrollProgress />
-      <Backdrop />
       <Nav onOpenPalette={openPalette} />
-      <Hero onOpenPalette={openPalette} />
-      <StackMarquee />
-      <About />
-      <Experience />
-      <Work />
-      <CaseStudies eyebrow={<Reveal><Eyebrow num="04">Deep Dive</Eyebrow></Reveal>} />
-      <Stack />
-      <Network />
-      <Terminal />
-      <Recognition />
-      <Contact />
+      <main>
+        <Hero ready={!intro} />
+        <StackMarquee />
+        <About />
+        <Experience />
+        <Work />
+        <CaseStudies num="04" Head={SectionHead} />
+        <Stack />
+        <Network />
+        <Terminal />
+        <Recognition />
+        <Contact />
+      </main>
       <Footer />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} items={paletteItems} />
     </div>
   );
 }
+
