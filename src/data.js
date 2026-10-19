@@ -9,7 +9,7 @@ export const LINKS = {
   portfolio: "https://vahini-dev.vercel.app/",
   email: "vahinivenkatac@gmail.com",
   phone: "+91 8790261823",
-  resume: "https://drive.google.com/file/d/1hvl7eQHsGslxknRLoo8KhHc6KwRSmLvY/view?usp=sharing",
+  resume: "https://drive.google.com/file/d/1Cl6BD5KMc8CdouEz4eUt86icKnpRDcmJ/view?usp=sharing",
 };
 
 export const NAV = [
