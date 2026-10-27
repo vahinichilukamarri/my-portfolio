@@ -11,7 +11,8 @@ import Recognition from "./Recognition";
 import AskAgent from "./AskAgent";
 import Tour from "./Tour";
 import Interrogation from "./Interrogation";
-import { PROFILE, PROFILES, isHighlighted, orderProjects, orderStack, tailoredUrl } from "./profiles";
+import StackWiring from "./StackWiring";
+import { PROFILE, PROFILES, orderProjects, tailoredUrl } from "./profiles";
 import { BlurText, Counter, FillButton, LineMask, Magnetic, Reveal, ScrubText } from "./motion";
 import { EASE, scrollToId, useSmoothScroll } from "./smooth";
 import { EDUCATION, EXPERIENCE, HIGHLIGHTS, LINKS, NAV, PROJECTS, PUBLICATION, STACK, TICKER } from "./data";
@@ -938,39 +939,6 @@ function Work() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   STACK / SKILLS
-   ══════════════════════════════════════════════════════════ */
-function Stack() {
-  return (
-    <section id="stack" className="relative py-28 sm:py-40">
-      <div className="wrap">
-        <SectionHead num="05" label="Stack" aside="Tools I reach for" a="What runs" b="underneath" />
-        <div className="mt-16 border-t border-[var(--border)]">
-          {orderStack(STACK).map((s, i) => (
-            <Reveal key={s.cat} delay={i * 0.04} className="grid gap-5 border-b border-[var(--border)] py-8 lg:grid-cols-[300px_1fr]">
-              <div className="flex items-baseline gap-4">
-                <span className="font-mono text-xs" style={{ color: accent(s.accent) }}>{String(i + 1).padStart(2, "0")}</span>
-                <div>
-                  <div className="font-display text-xl font-medium tracking-[-0.02em]">{s.cat}</div>
-                  <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted-2)]">{s.items.length} tools</div>
-                </div>
-              </div>
-              <div className="font-display flex flex-wrap gap-x-2 gap-y-1 text-[clamp(1.25rem,2.3vw,2rem)] leading-snug font-medium tracking-[-0.035em]" style={{ "--accent-c": accent(s.accent) }}>
-                {s.items.map((it, j) => (
-                  <span key={it} className={`transition-colors duration-300 hover:text-[var(--accent-c)] ${isHighlighted(it) ? "text-[var(--ink)] underline decoration-[var(--accent)] decoration-2 underline-offset-[0.18em]" : "text-[var(--muted)]"}`}>
-                    {it}{j < s.items.length - 1 && <span className="text-[var(--muted-2)]">,</span>}
-                  </span>
-                ))}
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════
    NETWORK — the hand of cards, mimicking a real LinkedIn post
    ══════════════════════════════════════════════════════════ */
 function Network() {
@@ -1181,7 +1149,7 @@ export default function App() {
         <Experience />
         <Work />
         <CaseStudies num="04" Head={SectionHead} />
-        <Stack />
+        <StackWiring num="05" Head={SectionHead} />
         <Network />
         <Interrogation num="07" />
         <Recognition num="08" Head={SectionHead} Arrow={Arrow} />

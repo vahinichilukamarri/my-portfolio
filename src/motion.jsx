@@ -140,3 +140,41 @@ export function FillButton({ children, href, onClick, variant = "solid", classNa
   if (href) return <a href={href} target="_blank" rel="noreferrer" className={`${base} ${look}`} {...rest}>{inner}</a>;
   return <button type="button" onClick={onClick} className={`${base} ${look}`} {...rest}>{inner}</button>;
 }
+
+/* ══════════════════════════════════════════════════════════
+   DECODE — glyph scramble that resolves into text
+   ══════════════════════════════════════════════════════════ */
+const GLYPHS = "!<>-_\\/[]{}=+*^?#01";
+
+/* Scrambles glyphs, then resolves the text left to right. Mount it to play. */
+export function Decode({ text, speed = 1, onDone, className = "" }) {
+  const [still] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [out, setOut] = useState(() => (still ? text : ""));
+  const doneRef = useRef(onDone);
+  useEffect(() => { doneRef.current = onDone; });
+
+  useEffect(() => {
+    let raf;
+    if (still) { raf = requestAnimationFrame(() => doneRef.current?.()); return () => cancelAnimationFrame(raf); }
+    const start = performance.now();
+    const dur = (350 + text.length * 18) / speed;
+    const tick = now => {
+      const k = Math.min(1, (now - start) / dur);
+      const n = Math.floor(k * text.length);
+      let s = text.slice(0, n);
+      for (let i = n; i < Math.min(text.length, n + 8); i++) s += text[i] === " " ? " " : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+      setOut(s);
+      if (k < 1) raf = requestAnimationFrame(tick);
+      else doneRef.current?.();
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [text, speed, still]);
+
+  return (
+    <span className={className}>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">{out}</span>
+    </span>
+  );
+}

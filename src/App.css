@@ -115,3 +115,9 @@ body {
     radial-gradient(circle at center, rgba(240, 237, 230, 0.07) 1px, transparent 1.2px) 0 0 / 22px 22px,
     #0e0e0d;
 }
+
+/* Stack wiring — a wire draws in, then a pulse runs along it */
+.wire-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: wire-draw 0.7s cubic-bezier(.22, 1, .36, 1) forwards; }
+.wire-pulse { stroke-dasharray: 0.06 0.94; animation: wire-pulse 1.8s linear infinite; }
+@keyframes wire-draw { to { stroke-dashoffset: 0; } }
+@keyframes wire-pulse { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }

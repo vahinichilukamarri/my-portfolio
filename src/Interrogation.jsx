@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/
 import { EASE, scrollToId } from "./smooth";
 import { AnswerText, SourceChips } from "./AskAgent";
 import { ask } from "./ask-client";
+import { Decode } from "./motion";
 
 /* (07) Interrogation — a pinned, full-screen scene. An eye drawn entirely in
    ASCII glyphs assembles out of noise as you scroll in, follows the cursor,
@@ -24,39 +25,6 @@ const ease = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (
 const hash = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
 const noiseChar = () => NOISE[(Math.random() * NOISE.length) | 0];
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/* Scrambles glyphs, then resolves the text left to right. Mount it to play. */
-function Decode({ text, speed = 1, onDone, className = "" }) {
-  const [still] = useState(reducedMotion);
-  const [out, setOut] = useState(() => (still ? text : ""));
-  const doneRef = useRef(onDone);
-  useEffect(() => { doneRef.current = onDone; });
-
-  useEffect(() => {
-    let raf;
-    if (still) { raf = requestAnimationFrame(() => doneRef.current?.()); return () => cancelAnimationFrame(raf); }
-    const start = performance.now();
-    const dur = (350 + text.length * 18) / speed;
-    const tick = now => {
-      const k = clamp((now - start) / dur);
-      const n = Math.floor(k * text.length);
-      let s = text.slice(0, n);
-      for (let i = n; i < Math.min(text.length, n + 8); i++) s += text[i] === " " ? " " : noiseChar();
-      setOut(s);
-      if (k < 1) raf = requestAnimationFrame(tick);
-      else doneRef.current?.();
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [text, speed, still]);
-
-  return (
-    <span className={className}>
-      <span className="sr-only">{text}</span>
-      <span aria-hidden="true">{out}</span>
-    </span>
-  );
-}
 
 /* The ASCII eye. Draws to a canvas only while the section is on screen,
    capped at ~30fps; reduced motion gets a single still, fully open frame. */
