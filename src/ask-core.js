@@ -32,6 +32,7 @@ export class AskError extends Error {
 export function resolveCitations(raw) {
   const order = [];
   const text = raw
+    .replace(/【([^】]*)】/g, "[$1]") // some models cite with full-width brackets
     .replace(/\[([a-z0-9-]+(?:\s*,\s*[a-z0-9-]+)*)\]/gi, (_, group) => {
       const nums = group.split(/\s*,\s*/)
         .map(id => id.toLowerCase())

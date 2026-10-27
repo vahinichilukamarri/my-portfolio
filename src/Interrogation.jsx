@@ -28,7 +28,7 @@ const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)"
 
 /* The ASCII eye. Draws to a canvas only while the section is on screen,
    capped at ~30fps; reduced motion gets a single still, fully open frame. */
-function GlyphEye({ progress, busy }) {
+function GlyphEye({ progress, busy, topRef, fitRef }) {
   const ref = useRef(null);
   const busyRef = useRef(busy);
   useEffect(() => { busyRef.current = busy; }, [busy]);
@@ -42,7 +42,7 @@ function GlyphEye({ progress, busy }) {
     const LIME = css.getPropertyValue("--lime").trim() || "#d4ff3f";
     let W = 0, H = 0, cw = 0, ch = 0, cols = 0, rows = 0, mobile = false;
     let raf = 0, visible = false, last = 0, pointer = false;
-    let blinkAt = 2.5, dil = 0;
+    let blinkAt = 2.5, dil = 0, fitR = 0, fitCy = 0, floor = 0;
     const gaze = { x: 0, y: 0, tx: 0, ty: 0 };
 
     const resize = () => {
@@ -74,10 +74,18 @@ function GlyphEye({ progress, busy }) {
         dil += ((busyRef.current ? 1 : 0) - dil) * 0.06;
       }
 
-      // once the question prompt appears, the eye rises and shrinks out of its way
-      const lift = still ? 1 : ease(0.46, 0.58, p);
-      const cx = W / 2, cy = H * ((mobile ? 0.34 : 0.44) - lift * (mobile ? 0.1 : 0.12));
-      const R = Math.min(W * (mobile ? 0.48 : 0.44), H * 0.6) * (1 - lift * (mobile ? 0.1 : 0.25));
+      // Fit the eye into the free band between the header and the text block,
+      // re-measured every frame so it never overlaps the copy as that grows.
+      const box = canvas.getBoundingClientRect();
+      const top = (topRef.current?.getBoundingClientRect().bottom ?? box.top + 100) - box.top + 16;
+      floor = (fitRef.current?.getBoundingClientRect().top ?? box.bottom) - box.top - 20;
+      const band = Math.max(40, floor - top);
+      const tR = Math.min(W * (mobile ? 0.48 : 0.44), band / 2 / 0.72); // 0.72R = lid + crease half-height
+      const tCy = top + band / 2;
+      const k = still || !fitR ? 1 : 0.18;
+      fitR += (tR - fitR) * k;
+      fitCy += (tCy - fitCy) * k;
+      const cx = W / 2, cy = fitCy, R = fitR;
       const ix = gaze.x * 0.36, iy = gaze.y * 0.16;
       const irisR = 0.3, pupilR = 0.12 + 0.1 * dil;
       const spin = s * (0.35 + dil * 5);
@@ -113,7 +121,7 @@ function GlyphEye({ progress, busy }) {
           } else {
             const dist = Math.hypot(u, v * 1.4);
             const wave = Math.sin(dist * 10 - s * 1.6) * Math.sin(Math.atan2(v, u) * 3 + s * 0.3);
-            b = Math.max(0, wave) * 0.32 / (1 + dist * 1.5);
+            b = Math.max(0, wave) * 0.32 / (1 + dist * 1.5) * clamp((floor - r * ch) / 80); // fade out above the copy
           }
 
           const k = Math.round(clamp(b) * (RAMP.length - 1));
@@ -145,7 +153,7 @@ function GlyphEye({ progress, busy }) {
       pointer = true;
       const r = canvas.getBoundingClientRect();
       gaze.tx = clamp((e.clientX - r.left - r.width / 2) / (r.width / 2), -1, 1);
-      gaze.ty = clamp((e.clientY - r.top - r.height * 0.44) / (r.height / 2), -1, 1);
+      gaze.ty = clamp((e.clientY - r.top - fitCy) / (r.height / 2), -1, 1);
     };
 
     const io = new IntersectionObserver(([e]) => {
@@ -164,7 +172,7 @@ function GlyphEye({ progress, busy }) {
       io.disconnect(); ro.disconnect();
       window.removeEventListener("pointermove", onMove);
     };
-  }, [progress]);
+  }, [progress, topRef, fitRef]);
 
   return <canvas ref={ref} aria-hidden="true" className="absolute inset-0 h-full w-full" />;
 }
@@ -194,6 +202,8 @@ function Answer({ ex, onSource }) {
 export default function Interrogation({ num = "07" }) {
   const ref = useRef(null);
   const inputRef = useRef(null);
+  const headRef = useRef(null);
+  const copyRef = useRef(null);
   const busyRef = useRef(false);
   const [stage, setStage] = useState(0);
   const [ex, setEx] = useState(null);
@@ -223,12 +233,12 @@ export default function Interrogation({ num = "07" }) {
   return (
     <section id="ask" ref={ref} className="relative h-[340vh]" aria-label="Ask my portfolio">
       <div className="sticky top-0 h-[100svh] overflow-hidden">
-        <GlyphEye progress={scrollYProgress} busy={busy} />
+        <GlyphEye progress={scrollYProgress} busy={busy} topRef={headRef} fitRef={copyRef} />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_44%,transparent_30%,var(--bg)_100%)]" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/80 to-transparent" />
 
         <div className="wrap relative flex h-full flex-col pt-24 pb-24">
-          <div className="flex items-center gap-4 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+          <div ref={headRef} className="flex items-center gap-4 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
             <span className="shrink-0"><span className="text-[var(--accent)]">({num})</span> Interrogation</span>
             <span className="h-px flex-1 bg-[var(--border-hi)]" />
             <span className="flex shrink-0 items-center gap-2">
@@ -237,7 +247,7 @@ export default function Interrogation({ num = "07" }) {
             </span>
           </div>
 
-          <div className="mt-auto grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:items-end lg:gap-12">
+          <div ref={copyRef} className="mt-auto grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:items-end lg:gap-12">
             <div>
               {!ex && !ready && (
                 <ul className="space-y-1.5 font-mono text-[12px] text-[var(--muted)] sm:text-[13px]">
@@ -282,7 +292,7 @@ export default function Interrogation({ num = "07" }) {
             inert={!ready}
             animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
             transition={{ duration: 0.7, ease: EASE, delay: ready ? 0.25 : 0 }}
-            className="mt-6"
+            className={`mt-6 ${ready ? "" : "hidden"}`}
           >
             <form onSubmit={e => { e.preventDefault(); submit(input); }} className="group flex items-center gap-3 border-b border-[var(--border-hi)] pb-3 transition-colors focus-within:border-[var(--accent)]">
               <span className="font-mono text-lg text-[var(--accent)]">&gt;</span>

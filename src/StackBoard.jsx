@@ -154,6 +154,8 @@ export default function StackBoard({ num = "05", Head }) {
   const shown = useFlaps(target);
 
   const pick = i => { setAuto(false); setAt(i); };
+  // Step through the pages of the current category, wrapping around.
+  const turn = dir => pick(at - page.pi + (page.pi + dir + page.n) % page.n);
   const info = hover && (usedIn[hover]?.length
     ? `${hover} — used in ${usedIn[hover].join(", ")}`
     : `${hover} — in the toolbox, not yet in a public build`);
@@ -173,7 +175,7 @@ export default function StackBoard({ num = "05", Head }) {
                   key={s.cat}
                   role="tab"
                   aria-selected={on}
-                  onClick={() => pick(pages.findIndex(p => p.ci === ci))}
+                  onClick={() => (on && page.n > 1 ? turn(1) : pick(pages.findIndex(p => p.ci === ci)))}
                   className={`rounded-full border px-3.5 py-2 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors ${on ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--bg)]" : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-hi)] hover:text-[var(--ink)]"}`}
                 >
                   <span className="sm:hidden">{TAB[s.cat] || s.cat}</span>
@@ -186,7 +188,17 @@ export default function StackBoard({ num = "05", Head }) {
           <div ref={boardRef} className="board mt-5 rounded-2xl border border-[var(--border-hi)] bg-[#0c0c0d] p-3 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)] sm:p-5" style={{ "--n": cells }}>
             <div className="flex items-center justify-between px-1 pb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--muted)] sm:text-[11px]">
               <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" /> Departures — {page.cat}</span>
-              <span>{page.n > 1 ? `Page ${page.pi + 1}/${page.n}` : `Gate ${num}`}</span>
+              {page.n > 1 ? (
+                <span className="flex items-center gap-1.5">
+                  <button type="button" onClick={() => turn(-1)} aria-label="Previous page" className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border-hi)] text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]">‹</button>
+                  {Array.from({ length: page.n }, (_, i) => (
+                    <button key={i} type="button" onClick={() => pick(at - page.pi + i)} aria-label={`Page ${i + 1} of ${page.n}`} aria-current={i === page.pi} className="flex h-7 min-w-7 items-center justify-center rounded-full px-1.5 transition-colors hover:text-[var(--ink)]">
+                      <span className={i === page.pi ? "text-[var(--accent)]" : ""}>{i + 1}</span>
+                    </button>
+                  ))}
+                  <button type="button" onClick={() => turn(1)} aria-label="Next page" className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border-hi)] text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]">›</button>
+                </span>
+              ) : <span>Gate {num}</span>}
             </div>
 
             <div className="flex pb-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--muted-2)] sm:text-[10px]">
