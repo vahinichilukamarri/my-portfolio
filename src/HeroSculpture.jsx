@@ -213,6 +213,7 @@ export default function HeroSculpture({ ready, anchors: anchorProp = [] }) {
 
     // Centre the sculpture on whichever anchor is laid out (the hero's right
     // column on desktop, a band above the name on phones) and size it to fill it.
+    // The canvas runs well past the fold so a shape is never clipped mid-scroll.
     const EXTENT = 4.7; // widest shape, in world units, with some breathing room
     const resize = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
@@ -309,7 +310,7 @@ export default function HeroSculpture({ ready, anchors: anchorProp = [] }) {
   const s = SHAPES[shape];
   return (
     <>
-      <div ref={mountRef} aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[100svh] [&>canvas]:h-full [&>canvas]:w-full" />
+      <div ref={mountRef} aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[160svh] [&>canvas]:h-full [&>canvas]:w-full" />
       <button
         type="button"
         onClick={() => scrollToId(s.target)}
