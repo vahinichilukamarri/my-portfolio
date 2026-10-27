@@ -11,7 +11,7 @@ import Recognition from "./Recognition";
 import AskAgent from "./AskAgent";
 import Tour from "./Tour";
 import Interrogation from "./Interrogation";
-import StackWiring from "./StackWiring";
+import StackBoard from "./StackBoard";
 import { PROFILE, PROFILES, orderProjects, tailoredUrl } from "./profiles";
 import { BlurText, Counter, FillButton, LineMask, Magnetic, Reveal, ScrubText } from "./motion";
 import { EASE, scrollToId, useSmoothScroll } from "./smooth";
@@ -1149,7 +1149,7 @@ export default function App() {
         <Experience />
         <Work />
         <CaseStudies num="04" Head={SectionHead} />
-        <StackWiring num="05" Head={SectionHead} />
+        <StackBoard num="05" Head={SectionHead} />
         <Network />
         <Interrogation num="07" />
         <Recognition num="08" Head={SectionHead} Arrow={Arrow} />
