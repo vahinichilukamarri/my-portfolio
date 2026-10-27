@@ -102,6 +102,7 @@ function ScrollProgress() {
    Once per session; any key or click skips it.
    ══════════════════════════════════════════════════════════ */
 const IntroOrb = lazy(() => import("./IntroOrb"));
+const HeroSculpture = lazy(() => import("./HeroSculpture"));
 const INTRO_WORDS = ["agents", "evals", "ledgers", "pipelines"];
 const INTRO_COLS = 6;
 const SHUTTER = [0.76, 0, 0.24, 1];
@@ -357,7 +358,8 @@ function Hero({ ready }) {
   const fade = d => ({ initial: { opacity: 0, y: 16 }, animate: ready ? { opacity: 1, y: 0 } : {}, transition: { duration: 0.9, delay: d, ease: EASE } });
   return (
     <section id="hero" className="relative pt-28 sm:pt-32">
-      <div className="wrap">
+      <Suspense fallback={null}><HeroSculpture ready={ready} /></Suspense>
+      <div className="wrap relative z-10">
         <motion.div {...fade(0.1)} className="grid gap-3 border-b border-[var(--border)] pb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] sm:grid-cols-3">
           <span>Portfolio — ©2026</span>
           <span className="sm:text-center">Hyderabad, IN · 17.38°N 78.48°E</span>
@@ -428,7 +430,7 @@ function HeroFrame() {
   const y = useTransform(scrollYProgress, [0, 1], [60, 0]);
 
   return (
-    <div ref={ref} id="hero-frame" className="wrap mt-16 sm:mt-24" style={{ perspective: 1400 }}>
+    <div ref={ref} id="hero-frame" className="wrap relative z-10 mt-16 sm:mt-24" style={{ perspective: 1400 }}>
       <motion.div
         style={{ scale, rotateX, borderRadius: radius, y, transformOrigin: "50% 100%" }}
         className="aurora relative flex min-h-[78vh] flex-col justify-between overflow-hidden border border-[var(--border-hi)] p-5 sm:p-8 lg:p-10"
