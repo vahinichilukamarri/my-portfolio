@@ -1,8 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE, scrollToId } from "./smooth";
-import { retrieve } from "./knowledge";
-import { LINKS } from "./data";
+import { ask } from "./ask-client";
 
 /* "Ask my portfolio" — a recruiter can ask anything about Vahini and get a
    short answer grounded in this site, with numbered sources that jump to the
@@ -27,7 +26,7 @@ function Spark({ className = "" }) {
 
 /* Renders "…sentence [1][2]." with clickable citation marks. When an answer
    cites anything, sentences that cite nothing are dimmed — they're unverified. */
-function AnswerText({ text, sources, onSource }) {
+export function AnswerText({ text, sources, onSource }) {
   const sentences = text.match(/[^.!?]+[.!?]+(?:\[\d+\])*|[^.!?]+$/g) || [text];
   const anyCited = sources.length > 0;
   return (
@@ -54,7 +53,7 @@ function AnswerText({ text, sources, onSource }) {
   );
 }
 
-function SourceChips({ sources, onSource }) {
+export function SourceChips({ sources, onSource }) {
   if (!sources.length) return null;
   return (
     <div className="mt-3 flex flex-wrap gap-1.5">
@@ -67,25 +66,6 @@ function SourceChips({ sources, onSource }) {
       ))}
     </div>
   );
-}
-
-async function ask(question) {
-  try {
-    const res = await fetch("/api/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok && data.answer) return { kind: "answer", ...data };
-    if (res.status === 429) return { kind: "error", answer: data.error || "Too many questions right now — try again in a minute.", sources: [] };
-  } catch { /* network failure — fall through to retrieval */ }
-
-  // Model unreachable: show the most relevant parts of the page instead.
-  const hits = retrieve(question);
-  return hits.length
-    ? { kind: "fallback", answer: "The AI model isn't reachable right now, so here are the parts of the portfolio that best match your question.", sources: hits.map(h => ({ id: h.id, label: h.label, section: h.section })) }
-    : { kind: "fallback", answer: `The AI model isn't reachable right now and nothing on the page matched that. You can email Vahini directly at ${LINKS.email}.`, sources: [] };
 }
 
 export default function AskAgent({ hidden = false }) {

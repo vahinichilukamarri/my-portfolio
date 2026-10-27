@@ -10,107 +10,14 @@ import CaseStudies from "./CaseStudies";
 import Recognition from "./Recognition";
 import AskAgent from "./AskAgent";
 import Tour from "./Tour";
+import Interrogation from "./Interrogation";
 import { PROFILE, PROFILES, isHighlighted, orderProjects, orderStack, tailoredUrl } from "./profiles";
 import { BlurText, Counter, FillButton, LineMask, Magnetic, Reveal, ScrubText } from "./motion";
 import { EASE, scrollToId, useSmoothScroll } from "./smooth";
-import { ACHIEVEMENTS, CERTS, EDUCATION, EXPERIENCE, HIGHLIGHTS, LINKS, NAV, PROJECTS, PUBLICATION, STACK, TICKER } from "./data";
+import { EDUCATION, EXPERIENCE, HIGHLIGHTS, LINKS, NAV, PROJECTS, PUBLICATION, STACK, TICKER } from "./data";
 import { LINKEDIN_POSTS } from "./posts";
 
 const accent = a => `var(--${a})`;
-
-/* ══════════════════════════════════════════════════════════
-   TERMINAL COMMANDS — driven entirely by this page's own data
-   ══════════════════════════════════════════════════════════ */
-function useTerminalCommands() {
-  const repos = PROJECTS.map(p => ({ slug: p.title.toLowerCase().replace(/\s+/g, "-"), ...p }));
-
-  const findRepo = q => {
-    if (!q) return null;
-    const n = parseInt(q, 10);
-    if (!Number.isNaN(n) && repos[n - 1]) return repos[n - 1];
-    return repos.find(r => r.slug.includes(q.toLowerCase())) || null;
-  };
-
-  const run = raw => {
-    const parts = raw.trim().split(/\s+/);
-    const cmd = (parts[0] || "").toLowerCase();
-    const arg = parts.slice(1).join(" ");
-
-    switch (cmd) {
-      case "":
-        return [];
-      case "help":
-        return [
-          "available commands:",
-          "  help              show this list",
-          "  ls / repos        list repositories",
-          "  whoami            about vahini",
-          "  stack             tech stack",
-          "  cat resume        resume link",
-          "  cat <repo>        repo description",
-          "  open <repo|#>     open repo on github",
-          "  experience        salesforce mentorship",
-          "  publications      research papers",
-          "  education         degrees",
-          "  achievements      awards & activities",
-          "  certs             certifications",
-          "  contact           how to reach me",
-          "  clear             clear the terminal",
-        ];
-      case "ls":
-      case "repos":
-        return repos.map((r, i) => `${i + 1}. ${r.slug.padEnd(34)} ${r.sub}`);
-      case "whoami":
-      case "about":
-        return [
-          "venkata vahini chilukamarri",
-          "final-year cse @ kmit, hyderabad · cgpa 9.12",
-          "software engineer · ai engineer · research co-author",
-          "status: open to internships",
-        ];
-      case "stack":
-        return STACK.flatMap(s => [`${s.cat}:`, `  ${s.items.join(", ")}`]);
-      case "cat":
-        if (!arg) return ["usage: cat <resume|repo-name>"];
-        if (/resume/i.test(arg)) return [`resume → ${LINKS.resume}`];
-        {
-          const r = findRepo(arg);
-          if (r) return [r.title, r.desc, `stack: ${r.stack.join(", ")}`, `source: ${r.gh || "not yet public"}`];
-        }
-        return [`cat: ${arg}: no such file`];
-      case "open":
-        if (/linkedin/i.test(arg)) { window.open(LINKS.linkedin, "_blank"); return ["opening linkedin ↗"]; }
-        if (/portfolio/i.test(arg)) { window.open(LINKS.portfolio, "_blank"); return ["opening portfolio ↗"]; }
-        {
-          const r = findRepo(arg);
-          if (r && r.gh) { window.open(r.gh, "_blank"); return [`opening ${r.slug} ↗`]; }
-          if (r) return [`${r.slug}: source not public yet`];
-        }
-        return [`open: ${arg || "?"} — not found, try 'ls'`];
-      case "experience":
-        return [`${EXPERIENCE.org} — ${EXPERIENCE.when}`, EXPERIENCE.role, ...EXPERIENCE.points.map(p => `  - ${p}`)];
-      case "publications":
-      case "papers":
-        return [`${PUBLICATION.title} — ${PUBLICATION.kind}`, PUBLICATION.status, ...PUBLICATION.points.map(p => `  - ${p}`)];
-      case "education":
-        return EDUCATION.map(e => `- ${e.school} · ${e.degree} · ${e.score} · ${e.when}`);
-      case "achievements":
-        return ACHIEVEMENTS.map(a => `- ${a.t}: ${a.d}`);
-      case "certs":
-        return CERTS.map(c => `- ${c.t} (${c.o})`);
-      case "contact":
-        return [`email  → ${LINKS.email}`, `github → ${LINKS.github}`, `phone  → ${LINKS.phone}`];
-      case "sudo":
-        return ["permission denied: vahini is not in the sudoers file. this incident will be reported. (jk — try 'help')"];
-      case "clear":
-        return null;
-      default:
-        return [`command not found: ${cmd} — type 'help'`];
-    }
-  };
-
-  return { run, repos };
-}
 
 /* ══════════════════════════════════════════════════════════
    SMALL HELPERS
@@ -1081,131 +988,6 @@ function Network() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   TERMINAL — interactive, driven entirely by this page's own data
-   ══════════════════════════════════════════════════════════ */
-function Terminal() {
-  const { run, repos } = useTerminalCommands();
-  const [lines, setLines] = useState([
-    { t: "sys", v: "welcome to vahini@terminal — type 'help' or tap a command on the right" },
-  ]);
-  const [input, setInput] = useState("");
-  const [hist, setHist] = useState([]);
-  const [histIdx, setHistIdx] = useState(-1);
-  const scrollRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const exec = raw => {
-    const cmd = raw.trim();
-    if (!cmd) return;
-    setLines(l => [...l, { t: "cmd", v: cmd }]);
-    if (cmd.toLowerCase() === "clear") { setLines([]); setHist(h => [...h, cmd]); setHistIdx(-1); return; }
-    const out = run(cmd);
-    if (out && out.length) setLines(l => [...l, ...out.map(v => ({ t: "out", v }))]);
-    setHist(h => [...h, cmd]);
-    setHistIdx(-1);
-  };
-
-  const onSubmit = e => {
-    e.preventDefault();
-    exec(input);
-    setInput("");
-  };
-
-  const onKeyDown = e => {
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (!hist.length) return;
-      const idx = histIdx === -1 ? hist.length - 1 : Math.max(0, histIdx - 1);
-      setHistIdx(idx); setInput(hist[idx]);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (histIdx === -1) return;
-      const idx = histIdx + 1;
-      if (idx >= hist.length) { setHistIdx(-1); setInput(""); }
-      else { setHistIdx(idx); setInput(hist[idx]); }
-    }
-  };
-
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [lines]);
-
-  const CHEATS = [
-    ["help", "list all commands"],
-    ["ls", "list repositories"],
-    ["whoami", "about vahini"],
-    ["cat morph", "the newest build"],
-    ["publications", "research"],
-    ["stack", "tech stack"],
-    ["cat resume", "resume link"],
-    [`open ${repos[1]?.slug || "trace"}`, "open a repo"],
-    ["experience", "salesforce mentorship"],
-    ["contact", "get in touch"],
-  ];
-
-  return (
-    <section id="terminal" className="relative py-28 sm:py-40">
-      <div className="wrap">
-        <SectionHead num="07" label="Terminal" aside="Nothing fetched externally" a="Skip the scrolling —" b="just ask" />
-        <Reveal delay={0.1}><p className="mt-6 max-w-2xl text-lg text-[var(--muted)]">A live terminal — type a command yourself, or tap one from the cheat sheet. Everything it answers with comes straight from this page's own data.</p></Reveal>
-
-        <Reveal delay={0.14} className="mt-14 grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-          <div className="overflow-hidden rounded-3xl border border-[var(--border-hi)] bg-[#0c0c0e] shadow-2xl shadow-black/50" onClick={() => inputRef.current?.focus()}>
-            <div className="flex items-center gap-2 border-b border-[var(--border)] px-5 py-3.5">
-              <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
-              <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
-              <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
-              <span className="ml-3 font-mono text-[11px] text-[var(--muted-2)]">vahini@terminal:~</span>
-            </div>
-            <div ref={scrollRef} data-lenis-prevent className="h-[380px] overflow-y-auto p-6 font-mono text-[13px] leading-relaxed sm:p-8">
-              {lines.map((l, i) => (
-                <div key={i} className={l.t === "cmd" ? "text-[var(--ink)]" : l.t === "sys" ? "text-[var(--muted-2)]" : "whitespace-pre-wrap text-[var(--muted)]"}>
-                  {l.t === "cmd" ? <><span className="text-[var(--accent)]">$</span> {l.v}</> : l.v}
-                </div>
-              ))}
-              <form onSubmit={onSubmit} className="mt-1 flex items-center gap-2">
-                <span className="text-[var(--accent)]">$</span>
-                <input
-                  ref={inputRef}
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-label="Terminal command input"
-                  className="flex-1 bg-transparent text-[var(--ink)] outline-none"
-                  placeholder="type a command…"
-                />
-                <span className="animate-caret text-[var(--accent)]">▍</span>
-              </form>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-[var(--border)] p-6">
-            <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">Cheat sheet</div>
-            <div className="mt-4 space-y-1">
-              {CHEATS.map(([c, d]) => (
-                <button
-                  key={c}
-                  onClick={() => { exec(c); inputRef.current?.focus({ preventScroll: true }); }}
-                  className="group flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-[var(--surface-hi)]"
-                >
-                  <span className="font-mono text-xs text-[var(--ink)] transition-colors group-hover:text-[var(--accent)]">{c}</span>
-                  <span className="text-right text-[11px] text-[var(--muted-2)]">{d}</span>
-                </button>
-              ))}
-            </div>
-            <a href={LINKS.github} target="_blank" rel="noreferrer" className="mt-5 flex items-center justify-between border-t border-[var(--border)] pt-4 font-mono text-[11px] text-[var(--muted)] transition-colors hover:text-[var(--accent)]">
-              open real github profile <Arrow />
-            </a>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════
    CONTACT
    ══════════════════════════════════════════════════════════ */
 function Contact() {
@@ -1401,7 +1183,7 @@ export default function App() {
         <CaseStudies num="04" Head={SectionHead} />
         <Stack />
         <Network />
-        <Terminal />
+        <Interrogation num="07" />
         <Recognition num="08" Head={SectionHead} Arrow={Arrow} />
         <Contact />
       </main>

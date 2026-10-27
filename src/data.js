@@ -20,7 +20,7 @@ export const NAV = [
   { id: "deepdive", label: "Deep Dive", num: "04" },
   { id: "stack", label: "Stack", num: "05" },
   { id: "network", label: "Network", num: "06" },
-  { id: "terminal", label: "Terminal", num: "07" },
+  { id: "ask", label: "Ask", num: "07" },
   { id: "recognition", label: "Recognition", num: "08" },
   { id: "contact", label: "Contact", num: "09" },
 ];
