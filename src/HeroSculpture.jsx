@@ -149,7 +149,8 @@ function lattice(n) {
   return out;
 }
 
-export default function HeroSculpture({ ready }) {
+export default function HeroSculpture({ ready, anchors: anchorProp = [] }) {
+  const [anchors] = useState(anchorProp); // refs, stable for the component's life
   const mountRef = useRef(null);
   const readyRef = useRef(ready);
   const [shape, setShape] = useState(0);
@@ -201,7 +202,7 @@ export default function HeroSculpture({ ready }) {
       blending: THREE.AdditiveBlending,
       uniforms: {
         uTime: { value: 0 }, uMorph: { value: 1 }, uForm: { value: still ? 1 : 0 }, uScatter: { value: 0 },
-        uPixelRatio: { value: dpr }, uSize: { value: small ? 0.85 : 1 }, uAspect: { value: 1 },
+        uPixelRatio: { value: dpr }, uSize: { value: small ? 0.95 : 1 }, uAspect: { value: 1 },
         uPointer: { value: new THREE.Vector2(9, 9) }, uPush: { value: 0 },
         uLime: { value: LIME }, uBone: { value: BONE },
       },
@@ -210,23 +211,33 @@ export default function HeroSculpture({ ready }) {
     points.frustumCulled = false;
     group.add(points);
 
-    // Sit to the right of the name on desktop; centred behind the copy on phones.
+    // Centre the sculpture on whichever anchor is laid out (the hero's right
+    // column on desktop, a band above the name on phones) and size it to fill it.
+    const EXTENT = 4.7; // widest shape, in world units, with some breathing room
     const resize = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
+      if (!w || !h) return;
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
-      camera.position.z = w < 1024 ? 13.5 : 9.6;
-      camera.updateProjectionMatrix();
       material.uniforms.uAspect.value = w / h;
-      const visH = 2 * Math.tan((camera.fov * Math.PI) / 360) * camera.position.z;
+      const m = mount.getBoundingClientRect();
+      const a = anchors.map(r => r.current?.getBoundingClientRect()).find(r => r && r.width > 0 && r.height > 0);
+      const box = a
+        ? { x: a.left - m.left + a.width / 2, y: a.top - m.top + a.height / 2, size: Math.min(a.width, a.height) }
+        : { x: w / 2, y: h / 2, size: Math.min(w, h) * 0.7 };
+      const tan = Math.tan((camera.fov * Math.PI) / 360);
+      const visH = (EXTENT * h) / Math.max(box.size, 120);
+      camera.position.z = visH / (2 * tan);
+      camera.updateProjectionMatrix();
       const visW = visH * camera.aspect;
-      group.position.x = (w < 1024 ? 0 : 0.22) * visW;
-      group.position.y = (w < 1024 ? 0.12 : 0.04) * visH;
+      group.position.x = (box.x / w - 0.5) * visW;
+      group.position.y = (0.5 - box.y / h) * visH;
       if (still) renderer.render(scene, camera);
     };
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(mount);
+    anchors.forEach(r => r.current && ro.observe(r.current));
 
     const pointer = { x: 9, y: 9, active: 0, last: -10 };
     const onMove = e => {
@@ -293,17 +304,17 @@ export default function HeroSculpture({ ready }) {
       geo.dispose(); material.dispose(); renderer.dispose();
       renderer.domElement.remove();
     };
-  }, []);
+  }, [anchors]);
 
   const s = SHAPES[shape];
   return (
     <>
-      <div ref={mountRef} aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[100svh] opacity-55 lg:opacity-100 [&>canvas]:h-full [&>canvas]:w-full" />
+      <div ref={mountRef} aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[100svh] [&>canvas]:h-full [&>canvas]:w-full" />
       <button
         type="button"
         onClick={() => scrollToId(s.target)}
         data-cursor="View"
-        className={`group absolute top-[44svh] right-[var(--gutter)] z-20 hidden -translate-y-1/2 rotate-180 items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] transition-opacity duration-700 [writing-mode:vertical-rl] hover:text-[var(--ink)] lg:flex ${ready ? "opacity-100" : "opacity-0"}`}
+        className={`group absolute top-[54svh] right-[var(--gutter)] z-20 hidden -translate-y-1/2 rotate-180 items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] transition-opacity duration-700 [writing-mode:vertical-rl] hover:text-[var(--ink)] lg:flex ${ready ? "opacity-100" : "opacity-0"}`}
       >
         <span className="flex flex-col gap-1.5">
           {SHAPES.map((x, i) => <span key={x.build} className={`h-4 w-[2px] rounded-full transition-colors duration-500 ${i === shape ? "bg-[var(--accent)]" : "bg-[var(--border-hi)]"}`} />)}

@@ -356,10 +356,13 @@ const startTour = () => window.dispatchEvent(new Event("tour:start"));
 
 function Hero({ ready }) {
   const fade = d => ({ initial: { opacity: 0, y: 16 }, animate: ready ? { opacity: 1, y: 0 } : {}, transition: { duration: 0.9, delay: d, ease: EASE } });
+  // The sculpture sizes itself to whichever of these is on screen: the right column on desktop, the top band on phones.
+  const stageDesk = useRef(null);
+  const stageMobile = useRef(null);
   return (
-    <section id="hero" className="relative pt-28 sm:pt-32">
-      <Suspense fallback={null}><HeroSculpture ready={ready} /></Suspense>
-      <div className="wrap relative z-10">
+    <section id="hero" className="relative">
+      <Suspense fallback={null}><HeroSculpture ready={ready} anchors={[stageDesk, stageMobile]} /></Suspense>
+      <div className="wrap relative z-10 flex min-h-[100svh] flex-col pt-28 pb-10 sm:pt-32">
         <motion.div {...fade(0.1)} className="grid gap-3 border-b border-[var(--border)] pb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] sm:grid-cols-3">
           <span>Portfolio — ©2026</span>
           <span className="sm:text-center">Hyderabad, IN · 17.38°N 78.48°E</span>
@@ -368,51 +371,54 @@ function Hero({ ready }) {
           </span>
         </motion.div>
 
-        {PROFILE && (
-          <motion.div {...fade(0.2)} className="mt-6 flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-[0.14em]">
-            <span className="rounded-full bg-[var(--accent)] px-3 py-1 text-[var(--bg)]">Tailored view · {PROFILE.label}</span>
-            <a href="/" className="text-[var(--muted)] underline-offset-4 transition-colors hover:text-[var(--ink)] hover:underline">See the full portfolio</a>
-          </motion.div>
-        )}
+        <div ref={stageMobile} aria-hidden="true" className="h-[min(44svh,92vw)] lg:hidden" />
 
-        <h1 className="font-display mt-10 text-[clamp(3.4rem,13.2vw,14rem)] leading-[0.86] font-medium tracking-[-0.06em] sm:mt-14">
-          <span className="flex items-start gap-[0.12em]">
-            <em className="mt-[0.18em] font-serif text-[0.28em] font-normal leading-none tracking-normal text-[var(--muted)] italic">
-              <BlurText text="Venkata" by="char" play={ready} delay={0.2} />
-            </em>
-            <BlurText text="Vahini" by="char" play={ready} delay={0.25} stagger={0.05} />
-          </span>
-          <span className="block">
-            <BlurText text="Chilukamarri" by="char" play={ready} delay={0.45} stagger={0.04} />
-          </span>
-        </h1>
+        <div className="grid flex-1 items-center gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:pt-8">
+          <div>
+            {PROFILE && (
+              <motion.div {...fade(0.2)} className="mb-6 flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-[0.14em]">
+                <span className="rounded-full bg-[var(--accent)] px-3 py-1 text-[var(--bg)]">Tailored view · {PROFILE.label}</span>
+                <a href="/" className="text-[var(--muted)] underline-offset-4 transition-colors hover:text-[var(--ink)] hover:underline">See the full portfolio</a>
+              </motion.div>
+            )}
 
-        <div className="mt-10 grid gap-10 lg:mt-14 lg:grid-cols-[1.25fr_1fr] lg:items-end">
-          <motion.div {...fade(0.9)}>
-            <p className="max-w-xl text-lg leading-relaxed text-[var(--muted)] sm:text-xl">
-              <IntroLine text={PROFILE?.intro ?? "Final-year CSE at KMIT building AI systems that are verified, not trusted — agents that ship their own test suites, payment agents fenced by deterministic policy, and ledgers proven with property-based tests."} />
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Magnetic><FillButton onClick={() => scrollToId("work")}>See the work <span aria-hidden="true">↓</span></FillButton></Magnetic>
-              <Magnetic><FillButton variant="ghost" onClick={() => scrollToId("contact")}>Get in touch</FillButton></Magnetic>
-              <button onClick={startTour} className="group ml-1 inline-flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] transition-colors hover:text-[var(--ink)]">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-hi)] transition-colors group-hover:border-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-[var(--bg)]">
-                  <svg viewBox="0 0 24 24" className="h-3 w-3 translate-x-[1px]" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-                </span>
-                60-sec tour
-              </button>
-            </div>
-            <div className="mt-6"><Ticker /></div>
-          </motion.div>
-          <ul className="font-display text-right text-[clamp(1.2rem,2.2vw,1.9rem)] leading-[1.15] font-medium tracking-[-0.03em] uppercase">
-            {ROLES.map((r, i) => (
-              <li key={r} className="overflow-hidden">
-                <motion.span className="block" initial={{ y: "110%" }} animate={ready ? { y: 0 } : {}} transition={{ duration: 1, delay: 0.85 + i * 0.08, ease: EASE }}>
-                  {r}
-                </motion.span>
-              </li>
-            ))}
-          </ul>
+            <h1 className="font-display text-[clamp(2.9rem,6.4vw,6.6rem)] leading-[0.9] font-medium tracking-[-0.055em]">
+              <em className="mb-2 block font-serif text-[0.36em] font-normal leading-none tracking-normal text-[var(--muted)] italic">
+                <BlurText text="Venkata" by="char" play={ready} delay={0.2} />
+              </em>
+              <span className="block"><BlurText text="Vahini" by="char" play={ready} delay={0.25} stagger={0.05} /></span>
+              <span className="block"><BlurText text="Chilukamarri" by="char" play={ready} delay={0.45} stagger={0.04} /></span>
+            </h1>
+
+            <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--ink)]">
+              {ROLES.map((r, i) => (
+                <li key={r} className="flex items-center gap-4 overflow-hidden">
+                  {i > 0 && <span className="text-[var(--accent)]">/</span>}
+                  <motion.span className="block" initial={{ y: "110%" }} animate={ready ? { y: 0 } : {}} transition={{ duration: 1, delay: 0.85 + i * 0.08, ease: EASE }}>
+                    {r}
+                  </motion.span>
+                </li>
+              ))}
+            </ul>
+
+            <motion.div {...fade(0.9)}>
+              <p className="mt-8 max-w-lg text-base leading-relaxed text-[var(--muted)] sm:text-lg">
+                <IntroLine text={PROFILE?.intro ?? "Final-year CSE at KMIT building AI systems that are verified, not trusted — agents that ship their own test suites, payment agents fenced by deterministic policy, and ledgers proven with property-based tests."} />
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Magnetic><FillButton onClick={() => scrollToId("work")}>See the work <span aria-hidden="true">↓</span></FillButton></Magnetic>
+                <Magnetic><FillButton variant="ghost" onClick={() => scrollToId("contact")}>Get in touch</FillButton></Magnetic>
+                <button onClick={startTour} className="group ml-1 inline-flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] transition-colors hover:text-[var(--ink)]">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-hi)] transition-colors group-hover:border-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-[var(--bg)]">
+                    <svg viewBox="0 0 24 24" className="h-3 w-3 translate-x-[1px]" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                  </span>
+                  60-sec tour
+                </button>
+              </div>
+              <div className="mt-6"><Ticker /></div>
+            </motion.div>
+          </div>
+          <div ref={stageDesk} aria-hidden="true" className="hidden self-stretch lg:block" />
         </div>
       </div>
       <HeroFrame />
